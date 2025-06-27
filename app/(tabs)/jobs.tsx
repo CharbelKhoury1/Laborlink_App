@@ -164,7 +164,10 @@ export default function JobsScreen() {
   };
 
   const handleJobPress = (jobId: string) => {
-    router.push(`/jobs/${jobId}`);
+    router.push({
+      pathname: '/(tabs)/jobs/[id]',
+      params: { id: jobId }
+    });
   };
 
   const renderWorkerJobs = () => (
@@ -240,7 +243,7 @@ export default function JobsScreen() {
           <Text style={styles.title}>Your Jobs</Text>
           <TouchableOpacity 
             style={styles.postJobButton}
-            onPress={() => router.push('/jobs/post')}
+            onPress={() => router.push('/(tabs)/jobs/post') as any}
           >
             <Plus size={20} color={Colors.white} />
             <Text style={styles.postJobButtonText}>Post Job</Text>

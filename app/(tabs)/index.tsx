@@ -61,7 +61,10 @@ export default function HomeScreen() {
   }, []);
 
   const handleJobPress = (jobId: string) => {
-    router.push(`/jobs/${jobId}`);
+    router.push({
+      pathname: '/(tabs)/jobs/[id]',
+      params: { id: jobId }
+    });
   };
 
   const renderWorkerHome = () => (
@@ -103,7 +106,7 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nearby Jobs</Text>
-            <TouchableOpacity onPress={() => router.push('/jobs')}>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/jobs') as any}>
               <Text style={styles.viewAll}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -139,7 +142,7 @@ export default function HomeScreen() {
 
         <TouchableOpacity 
           style={styles.postJobButton}
-          onPress={() => router.push('/jobs/post')}
+          onPress={() => router.push('/(tabs)/jobs/post') as any}
         >
           <Plus size={24} color={Colors.white} />
           <Text style={styles.postJobText}>Post a New Job</Text>

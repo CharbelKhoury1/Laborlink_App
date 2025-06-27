@@ -8,6 +8,7 @@ interface AuthContextType {
   register: (userData: Partial<User>) => Promise<boolean>;
   logout: () => Promise<void>;
   loading: boolean;
+  initialized: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +23,8 @@ export const useAuth = () => {
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -30,6 +32,7 @@ export const useAuthState = () => {
 
   const loadUser = async () => {
     try {
+      setLoading(true);
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
         setUser(JSON.parse(userData));
@@ -38,12 +41,17 @@ export const useAuthState = () => {
       console.error('Error loading user:', error);
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       // Mock authentication - replace with actual API call
       const mockUser: User = {
         id: '1',
@@ -70,6 +78,10 @@ export const useAuthState = () => {
   const register = async (userData: Partial<User>): Promise<boolean> => {
     try {
       setLoading(true);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       // Mock registration - replace with actual API call
       const newUser: User = {
         id: Date.now().toString(),
@@ -92,10 +104,13 @@ export const useAuthState = () => {
 
   const logout = async (): Promise<void> => {
     try {
+      setLoading(true);
       await AsyncStorage.removeItem('user');
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,6 +119,7 @@ export const useAuthState = () => {
     login,
     register,
     logout,
-    loading
+    loading,
+    initialized
   };
 };

@@ -6,9 +6,14 @@ import { Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
+import { useAuthState } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
 
 export default function RootLayout() {
   useFrameworkReady();
+  
+  const router = useRouter();
+  const { user, initialized } = useAuthState();
 
   const [fontsLoaded, fontError] = useFonts({
     'Cairo-Regular': Cairo_400Regular,
@@ -22,6 +27,16 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    if (initialized) {
+      if (user) {
+        router.replace('/(tabs)');
+      } else {
+        router.replace('/auth');
+      }
+    }
+  }, [user, initialized]);
 
   if (!fontsLoaded && !fontError) {
     return null;

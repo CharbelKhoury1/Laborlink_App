@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { MapPin, Clock, DollarSign, Star, AlertCircle } from 'lucide-react-native';
+import { MapPin, Clock, DollarSign, Star, CircleAlert as AlertCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import { Job } from '@/types';

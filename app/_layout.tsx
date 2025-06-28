@@ -8,14 +8,16 @@ import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useAuthState } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
 import Colors from '@/constants/Colors';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function RootLayout() {
   useFrameworkReady();
   
   const router = useRouter();
-  const { user, initialized, loading } = useAuthState();
+  const { user, initialized, loading, error, clearError } = useAuthState();
 
   const [fontsLoaded, fontError] = useFonts({
     'Cairo-Regular': Cairo_400Regular,
@@ -31,32 +33,61 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
+    if (error) {
+      Alert.alert(
+        'Authentication Error',
+        error,
+        [
+          { text: 'OK', onPress: clearError }
+        ]
+      );
+    }
+  }, [error, clearError]);
+
+  useEffect(() => {
     if (initialized && !loading) {
-      console.log('Navigation check - User:', user, 'Initialized:', initialized); // Debug log
+      console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized); // Debug log
+      
       if (user) {
-        console.log('Navigating to tabs with user:', user.userType); // Debug log
+        console.log('✅ Navigating to tabs with user:', user.userType); // Debug log
         router.replace('/(tabs)');
       } else {
-        console.log('Navigating to auth'); // Debug log
+        console.log('ℹ️ Navigating to auth - no user found'); // Debug log
         router.replace('/auth');
       }
     }
-  }, [user, initialized, loading]);
+  }, [user, initialized, loading, router]);
 
+  // Show loading spinner while fonts are loading
   if (!fontsLoaded && !fontError) {
-    return null;
+    return (
+      <View style={styles.loadingContainer}>
+        <LoadingSpinner size="large" />
+      </View>
+    );
+  }
+
+  // Show loading spinner while auth is initializing
+  if (!initialized || loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <LoadingSpinner size="large" />
+      </View>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="typewriter-demo" />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </View>
+    <ErrorBoundary>
+      <View style={styles.container}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="auth" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="typewriter-demo" />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </View>
+    </ErrorBoundary>
   );
 }
 
@@ -64,5 +95,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

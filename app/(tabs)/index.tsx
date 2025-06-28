@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSign, Zap, Award, Target } from 'lucide-react-native';
+import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSign, Zap, Award, Target, Type } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import JobCard from '@/components/JobCard';
@@ -9,6 +9,7 @@ import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Typewriter } from '@/components/ui/Typewriter';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -241,7 +242,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Enhanced Header with Gradient */}
+        {/* Enhanced Header with Gradient and Typewriter */}
         <AnimatedView
           style={[
             styles.headerContainer,
@@ -259,9 +260,20 @@ export default function HomeScreen() {
           >
             <View style={styles.header}>
               <View style={styles.headerContent}>
-                <Text style={styles.greeting}>
-                  {getGreeting()}, {user?.name?.split(' ')[0]}! ✨
-                </Text>
+                <View style={styles.greetingContainer}>
+                  <Text style={styles.greetingStatic}>
+                    {getGreeting()}, {user?.name?.split(' ')[0]}! 
+                  </Text>
+                  <Typewriter
+                    text={['Ready to work? ✨', 'Find your next job! 🚀', 'Build your future! 💪']}
+                    speed={80}
+                    style={styles.greetingTypewriter}
+                    waitTime={2000}
+                    deleteSpeed={50}
+                    cursorChar="_"
+                    cursorStyle={styles.greetingCursor}
+                  />
+                </View>
                 <View style={styles.locationRow}>
                   <MapPin size={isTablet ? 20 : 16} color={modernColors.surface} />
                   <Text style={styles.location}>Beirut, Lebanon</Text>
@@ -391,6 +403,18 @@ export default function HomeScreen() {
               <Text style={styles.quickActionText}>Update Profile</Text>
               <Text style={styles.quickActionSubtext}>Enhance your visibility</Text>
             </AnimatedButton>
+
+            <AnimatedButton
+              style={styles.quickActionCard}
+              onPress={() => router.push('/typewriter-demo')}
+              gradientColors={[modernColors.accent, modernColors.accentLight]}
+            >
+              <View style={styles.quickActionIcon}>
+                <Type size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
+              <Text style={styles.quickActionText}>Typewriter Demo</Text>
+              <Text style={styles.quickActionSubtext}>See animation in action</Text>
+            </AnimatedButton>
           </View>
         </AnimatedView>
 
@@ -464,7 +488,7 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Enhanced Header with Gradient */}
+        {/* Enhanced Header with Gradient and Typewriter */}
         <AnimatedView
           style={[
             styles.headerContainer,
@@ -482,10 +506,21 @@ export default function HomeScreen() {
           >
             <View style={styles.header}>
               <View style={styles.headerContent}>
-                <Text style={styles.greeting}>
-                  Welcome back, {user?.name?.split(' ')[0]}! 👋
-                </Text>
-                <Text style={styles.subGreeting}>Find the right worker for your needs</Text>
+                <View style={styles.greetingContainer}>
+                  <Text style={styles.greetingStatic}>
+                    Welcome back, {user?.name?.split(' ')[0]}! 
+                  </Text>
+                  <Typewriter
+                    text={['Find skilled workers 👋', 'Post your next job 🚀', 'Build your team 💼']}
+                    speed={80}
+                    style={styles.greetingTypewriter}
+                    waitTime={2000}
+                    deleteSpeed={50}
+                    cursorChar="_"
+                    cursorStyle={styles.greetingCursor}
+                  />
+                </View>
+                <Text style={styles.subGreeting}>Connect with the right professionals for your needs</Text>
               </View>
               <AnimatedTouchableOpacity style={styles.notificationIcon}>
                 <View style={styles.notificationIconBg}>
@@ -769,12 +804,26 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
   headerContent: {
     flex: 1,
   },
-  greeting: {
+  greetingContainer: {
+    marginBottom: 8,
+  },
+  greetingStatic: {
     fontSize: responsiveDimensions.fontSize.hero,
     fontWeight: '800',
     color: modernColors.surface,
-    marginBottom: 8,
     letterSpacing: -0.5,
+    marginBottom: 4,
+  },
+  greetingTypewriter: {
+    fontSize: responsiveDimensions.fontSize.subtitle,
+    fontWeight: '600',
+    color: modernColors.surface,
+    opacity: 0.9,
+  },
+  greetingCursor: {
+    fontSize: responsiveDimensions.fontSize.subtitle,
+    color: modernColors.surface,
+    opacity: 0.9,
   },
   subGreeting: {
     fontSize: responsiveDimensions.fontSize.body,
@@ -890,11 +939,11 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     marginBottom: isTablet ? 32 : 24,
   },
   quickActions: {
-    flexDirection: 'row',
+    flexDirection: isTablet ? 'row' : 'column',
     gap: isTablet ? 16 : 12,
   },
   quickActionCard: {
-    flex: 1,
+    flex: isTablet ? 1 : undefined,
     borderRadius: responsiveDimensions.borderRadius,
     shadowColor: modernColors.shadow,
     shadowOffset: { width: 0, height: 8 },

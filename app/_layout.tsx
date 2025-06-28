@@ -15,7 +15,7 @@ export default function RootLayout() {
   useFrameworkReady();
   
   const router = useRouter();
-  const { user, initialized } = useAuthState();
+  const { user, initialized, loading } = useAuthState();
 
   const [fontsLoaded, fontError] = useFonts({
     'Cairo-Regular': Cairo_400Regular,
@@ -31,14 +31,17 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   useEffect(() => {
-    if (initialized) {
+    if (initialized && !loading) {
+      console.log('Navigation check - User:', user, 'Initialized:', initialized); // Debug log
       if (user) {
+        console.log('Navigating to tabs with user:', user.userType); // Debug log
         router.replace('/(tabs)');
       } else {
+        console.log('Navigating to auth'); // Debug log
         router.replace('/auth');
       }
     }
-  }, [user, initialized]);
+  }, [user, initialized, loading]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -49,6 +52,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="auth" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="typewriter-demo" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

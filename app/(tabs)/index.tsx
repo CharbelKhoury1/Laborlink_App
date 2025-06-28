@@ -127,6 +127,8 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    console.log('HomeScreen - User:', user, 'Loading:', loading); // Debug log
+    
     // Entrance animations
     Animated.sequence([
       Animated.parallel([
@@ -262,7 +264,7 @@ export default function HomeScreen() {
               <View style={styles.headerContent}>
                 <View style={styles.greetingContainer}>
                   <Text style={styles.greetingStatic}>
-                    {getGreeting()}, {user?.name?.split(' ')[0]}! 
+                    {getGreeting()}, {user?.name?.split(' ')[0] || 'Worker'}! 
                   </Text>
                   <Typewriter
                     text={['Ready to work? ✨', 'Find your next job! 🚀', 'Build your future! 💪']}
@@ -382,7 +384,7 @@ export default function HomeScreen() {
           <View style={styles.quickActions}>
             <AnimatedButton
               style={styles.quickActionCard}
-              onPress={() => router.push('/jobs')}
+              onPress={() => router.push('/(tabs)/jobs')}
               gradientColors={[modernColors.primary, modernColors.primaryLight]}
             >
               <View style={styles.quickActionIcon}>
@@ -394,7 +396,7 @@ export default function HomeScreen() {
             
             <AnimatedButton
               style={styles.quickActionCard}
-              onPress={() => router.push('/profile')}
+              onPress={() => router.push('/(tabs)/profile')}
               gradientColors={[modernColors.secondary, modernColors.secondaryLight]}
             >
               <View style={styles.quickActionIcon}>
@@ -508,7 +510,7 @@ export default function HomeScreen() {
               <View style={styles.headerContent}>
                 <View style={styles.greetingContainer}>
                   <Text style={styles.greetingStatic}>
-                    Welcome back, {user?.name?.split(' ')[0]}! 
+                    Welcome back, {user?.name?.split(' ')[0] || 'Client'}! 
                   </Text>
                   <Typewriter
                     text={['Find skilled workers 👋', 'Post your next job 🚀', 'Build your team 💼']}
@@ -702,7 +704,8 @@ export default function HomeScreen() {
     </View>
   );
 
-  if (loading || !user) {
+  // Show loading state while authentication is being determined
+  if (loading || !initialized) {
     return (
       <View style={styles.loadingContainer}>
         <LinearGradient
@@ -728,6 +731,30 @@ export default function HomeScreen() {
     );
   }
 
+  // Show error state if user is not found
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <LinearGradient
+          colors={[modernColors.accent, modernColors.accentLight]}
+          style={styles.loadingGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <Text style={styles.loadingTitle}>Authentication Error</Text>
+          <Text style={styles.loadingSubtitle}>Please try logging in again</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => router.replace('/auth')}
+          >
+            <Text style={styles.retryButtonText}>Go to Login</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  console.log('Rendering home for user type:', user.userType); // Debug log
   return user.userType === 'worker' ? renderWorkerHome() : renderClientHome();
 }
 
@@ -778,6 +805,18 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     color: modernColors.surface,
     fontSize: responsiveDimensions.fontSize.body,
     fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 20,
+  },
+  retryButtonText: {
+    color: modernColors.surface,
+    fontSize: responsiveDimensions.fontSize.body,
+    fontWeight: '600',
   },
   headerContainer: {
     marginBottom: isTablet ? -25 : -20,

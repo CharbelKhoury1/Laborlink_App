@@ -35,7 +35,9 @@ export const useAuthState = () => {
       setLoading(true);
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        console.log('Loaded user:', parsedUser); // Debug log
+        setUser(parsedUser);
       }
     } catch (error) {
       console.error('Error loading user:', error);
@@ -53,17 +55,21 @@ export const useAuthState = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Mock authentication - replace with actual API call
+      // Determine user type based on email for demo purposes
+      const userType = email.includes('client') ? 'client' : 'worker';
+      
       const mockUser: User = {
-        id: '1',
-        name: 'John Doe',
+        id: Date.now().toString(),
+        name: userType === 'client' ? 'Sarah Johnson' : 'Ahmad Hassan',
         email,
         phone: '+961 70 123 456',
-        userType: 'worker',
+        userType,
         verified: true,
         createdAt: new Date(),
         language: 'en'
       };
       
+      console.log('Login successful, saving user:', mockUser); // Debug log
       await AsyncStorage.setItem('user', JSON.stringify(mockUser));
       setUser(mockUser);
       return true;
@@ -85,12 +91,16 @@ export const useAuthState = () => {
       // Mock registration - replace with actual API call
       const newUser: User = {
         id: Date.now().toString(),
-        ...userData,
+        name: userData.name || 'New User',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        userType: userData.userType || 'worker',
         verified: false,
         createdAt: new Date(),
         language: 'en'
-      } as User;
+      };
       
+      console.log('Registration successful, saving user:', newUser); // Debug log
       await AsyncStorage.setItem('user', JSON.stringify(newUser));
       setUser(newUser);
       return true;
@@ -107,6 +117,7 @@ export const useAuthState = () => {
       setLoading(true);
       await AsyncStorage.removeItem('user');
       setUser(null);
+      console.log('User logged out'); // Debug log
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

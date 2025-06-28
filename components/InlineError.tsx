@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { AlertCircle, X } from 'lucide-react-native';
+import { CircleAlert as AlertCircle, X } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 
 interface InlineErrorProps {

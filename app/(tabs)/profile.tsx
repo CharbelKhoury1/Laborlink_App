@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Switch, Dimensions } from 'react-native';
 import { Settings, CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, LogOut, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
 import { useAuthState } from '@/hooks/useAuth';
 import { SKILL_CATEGORIES } from '@/constants/SkillCategories';
 import i18n from '@/utils/i18n';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+// Responsive breakpoints
+const isSmallDevice = screenWidth < 375;
+const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
+const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
+const isTablet = screenWidth >= 768;
 
 // Mock worker profile data
 const mockWorkerSkills = [
@@ -17,10 +25,21 @@ const mockWorkerSkills = [
 export default function ProfileScreen() {
   const { user, logout } = useAuthState();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   const handleLogout = async () => {
     await logout();
   };
+
+  const styles = createStyles(dimensions);
 
   const ProfileSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
     <View style={styles.section}>
@@ -46,7 +65,7 @@ export default function ProfileScreen() {
   }) => (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingItemLeft}>
-        <Icon size={20} color={Colors.textSecondary} />
+        <Icon size={isTablet ? 24 : 20} color={Colors.textSecondary} />
         <View style={styles.settingItemText}>
           <Text style={styles.settingItemTitle}>{title}</Text>
           {subtitle && <Text style={styles.settingItemSubtitle}>{subtitle}</Text>}
@@ -54,7 +73,7 @@ export default function ProfileScreen() {
       </View>
       <View style={styles.settingItemRight}>
         {rightElement}
-        {showChevron && <ChevronRight size={16} color={Colors.textSecondary} />}
+        {showChevron && <ChevronRight size={isTablet ? 20 : 16} color={Colors.textSecondary} />}
       </View>
     </TouchableOpacity>
   );
@@ -71,35 +90,35 @@ export default function ProfileScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
             <View style={styles.ratingContainer}>
-              <Star size={16} color={Colors.secondary} fill={Colors.secondary} />
+              <Star size={isTablet ? 20 : 16} color={Colors.secondary} fill={Colors.secondary} />
               <Text style={styles.rating}>4.8</Text>
               <Text style={styles.reviewCount}>(24 reviews)</Text>
             </View>
             <View style={styles.locationContainer}>
-              <MapPin size={14} color={Colors.textSecondary} />
+              <MapPin size={isTablet ? 18 : 14} color={Colors.textSecondary} />
               <Text style={styles.location}>Beirut, Lebanon</Text>
             </View>
             {user?.verified && (
               <View style={styles.verifiedBadge}>
-                <Shield size={14} color={Colors.success} />
+                <Shield size={isTablet ? 18 : 14} color={Colors.success} />
                 <Text style={styles.verifiedText}>Verified</Text>
               </View>
             )}
           </View>
           <TouchableOpacity style={styles.editButton}>
-            <Edit size={18} color={Colors.primary} />
+            <Edit size={isTablet ? 22 : 18} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Worker Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Briefcase size={20} color={Colors.primary} />
+            <Briefcase size={isTablet ? 28 : 20} color={Colors.primary} />
             <Text style={styles.statValue}>12</Text>
             <Text style={styles.statLabel}>Jobs Completed</Text>
           </View>
           <View style={styles.statItem}>
-            <Clock size={20} color={Colors.secondary} />
+            <Clock size={isTablet ? 28 : 20} color={Colors.secondary} />
             <Text style={styles.statValue}>145</Text>
             <Text style={styles.statLabel}>Hours Worked</Text>
           </View>
@@ -161,7 +180,7 @@ export default function ProfileScreen() {
         {/* Logout */}
         <View style={styles.logoutContainer}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={20} color={Colors.error} />
+            <LogOut size={isTablet ? 24 : 20} color={Colors.error} />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -181,29 +200,29 @@ export default function ProfileScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
             <View style={styles.ratingContainer}>
-              <Star size={16} color={Colors.secondary} fill={Colors.secondary} />
+              <Star size={isTablet ? 20 : 16} color={Colors.secondary} fill={Colors.secondary} />
               <Text style={styles.rating}>4.6</Text>
               <Text style={styles.reviewCount}>(8 reviews)</Text>
             </View>
             <View style={styles.locationContainer}>
-              <MapPin size={14} color={Colors.textSecondary} />
+              <MapPin size={isTablet ? 18 : 14} color={Colors.textSecondary} />
               <Text style={styles.location}>Beirut, Lebanon</Text>
             </View>
           </View>
           <TouchableOpacity style={styles.editButton}>
-            <Edit size={18} color={Colors.primary} />
+            <Edit size={isTablet ? 22 : 18} color={Colors.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Client Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Briefcase size={20} color={Colors.primary} />
+            <Briefcase size={isTablet ? 28 : 20} color={Colors.primary} />
             <Text style={styles.statValue}>5</Text>
             <Text style={styles.statLabel}>Jobs Posted</Text>
           </View>
           <View style={styles.statItem}>
-            <Star size={20} color={Colors.secondary} />
+            <Star size={isTablet ? 28 : 20} color={Colors.secondary} />
             <Text style={styles.statValue}>4.6</Text>
             <Text style={styles.statLabel}>Average Rating</Text>
           </View>
@@ -256,7 +275,7 @@ export default function ProfileScreen() {
         {/* Logout */}
         <View style={styles.logoutContainer}>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={20} color={Colors.error} />
+            <LogOut size={isTablet ? 24 : 20} color={Colors.error} />
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -275,7 +294,7 @@ export default function ProfileScreen() {
   return user.userType === 'worker' ? renderWorkerProfile() : renderClientProfile();
 }
 
-const styles = StyleSheet.create({
+const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -288,50 +307,50 @@ const styles = StyleSheet.create({
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 24,
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingTop: isTablet ? 32 : 20,
+    paddingBottom: isTablet ? 32 : 24,
     backgroundColor: Colors.white,
-    marginBottom: 16,
+    marginBottom: isTablet ? 20 : 16,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
+    width: isTablet ? 100 : 80,
+    height: isTablet ? 100 : 80,
+    borderRadius: isTablet ? 50 : 40,
+    marginRight: isTablet ? 20 : 16,
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: isTablet ? 24 : isLargeDevice ? 20 : isSmallDevice ? 18 : 19,
     fontWeight: 'bold',
     color: Colors.text,
-    marginBottom: 8,
+    marginBottom: isTablet ? 12 : 8,
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: isTablet ? 8 : 6,
   },
   rating: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     fontWeight: '600',
     color: Colors.text,
     marginLeft: 4,
     marginRight: 4,
   },
   reviewCount: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
   },
   locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: isTablet ? 12 : 8,
   },
   location: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
     marginLeft: 4,
   },
@@ -339,67 +358,67 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: isTablet ? 12 : 8,
+    paddingVertical: isTablet ? 6 : 4,
+    borderRadius: isTablet ? 16 : 12,
     alignSelf: 'flex-start',
   },
   verifiedText: {
-    fontSize: 11,
+    fontSize: isTablet ? 12 : 11,
     color: Colors.success,
     fontWeight: '500',
     marginLeft: 4,
   },
   editButton: {
-    padding: 8,
+    padding: isTablet ? 12 : 8,
   },
   statsContainer: {
     flexDirection: 'row',
     backgroundColor: Colors.white,
-    marginBottom: 16,
-    paddingVertical: 20,
+    marginBottom: isTablet ? 20 : 16,
+    paddingVertical: isTablet ? 28 : 20,
     gap: 1,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
-    gap: 8,
+    gap: isTablet ? 12 : 8,
   },
   statValue: {
-    fontSize: 20,
+    fontSize: isTablet ? 24 : isLargeDevice ? 20 : isSmallDevice ? 18 : 19,
     fontWeight: 'bold',
     color: Colors.text,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   section: {
     backgroundColor: Colors.white,
-    marginBottom: 16,
-    paddingTop: 20,
+    marginBottom: isTablet ? 20 : 16,
+    paddingTop: isTablet ? 28 : 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: isTablet ? 20 : 16,
     fontWeight: '600',
     color: Colors.text,
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingHorizontal: isTablet ? 32 : 20,
+    marginBottom: isTablet ? 20 : 16,
   },
   skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 8,
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingBottom: isTablet ? 28 : 20,
+    gap: isTablet ? 12 : 8,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingVertical: isTablet ? 20 : 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
@@ -409,16 +428,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingItemText: {
-    marginLeft: 12,
+    marginLeft: isTablet ? 16 : 12,
     flex: 1,
   },
   settingItemTitle: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     fontWeight: '500',
     color: Colors.text,
   },
   settingItemSubtitle: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
     marginTop: 2,
   },
@@ -429,17 +448,17 @@ const styles = StyleSheet.create({
   },
   logoutContainer: {
     backgroundColor: Colors.white,
-    marginBottom: 32,
+    marginBottom: isTablet ? 40 : 32,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 8,
+    paddingVertical: isTablet ? 20 : 16,
+    gap: isTablet ? 12 : 8,
   },
   logoutText: {
-    fontSize: 16,
+    fontSize: isTablet ? 18 : 16,
     fontWeight: '500',
     color: Colors.error,
   },

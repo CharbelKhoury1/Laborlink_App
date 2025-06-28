@@ -1,10 +1,18 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Phone, Video } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+// Responsive breakpoints
+const isSmallDevice = screenWidth < 375;
+const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
+const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
+const isTablet = screenWidth >= 768;
 
 // Mock conversations data
 const mockConversations = [
@@ -53,10 +61,21 @@ const mockConversations = [
 export default function MessagesScreen() {
   const router = useRouter();
   const { user } = useAuthState();
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   const handleConversationPress = (conversationId: string) => {
     router.push(`/messages/${conversationId}`);
   };
+
+  const styles = createStyles(dimensions);
 
   const ConversationItem = ({ conversation }: { conversation: any }) => (
     <TouchableOpacity 
@@ -80,7 +99,7 @@ export default function MessagesScreen() {
             styles.lastMessage, 
             conversation.unread && styles.unreadMessage
           ]} 
-          numberOfLines={2}
+          numberOfLines={isTablet ? 3 : 2}
         >
           {conversation.lastMessage}
         </Text>
@@ -90,10 +109,10 @@ export default function MessagesScreen() {
         {conversation.unread && <View style={styles.unreadDot} />}
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton}>
-            <Phone size={18} color={Colors.textSecondary} />
+            <Phone size={isTablet ? 22 : 18} color={Colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <Video size={18} color={Colors.textSecondary} />
+            <Video size={isTablet ? 22 : 18} color={Colors.textSecondary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -113,7 +132,7 @@ export default function MessagesScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>{i18n.t('messages')}</Text>
         <TouchableOpacity style={styles.newMessageButton}>
-          <MessageCircle size={20} color={Colors.primary} />
+          <MessageCircle size={isTablet ? 24 : 20} color={Colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -125,7 +144,7 @@ export default function MessagesScreen() {
         </ScrollView>
       ) : (
         <View style={styles.emptyState}>
-          <MessageCircle size={64} color={Colors.textLight} />
+          <MessageCircle size={isTablet ? 80 : 64} color={Colors.textLight} />
           <Text style={styles.emptyStateTitle}>No messages yet</Text>
           <Text style={styles.emptyStateDescription}>
             Start a conversation by applying to jobs or posting your own
@@ -136,7 +155,7 @@ export default function MessagesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -150,36 +169,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingTop: isTablet ? 24 : 16,
+    paddingBottom: isTablet ? 28 : 20,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   title: {
-    fontSize: 24,
+    fontSize: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
     fontWeight: 'bold',
     color: Colors.text,
   },
   newMessageButton: {
-    padding: 8,
+    padding: isTablet ? 12 : 8,
   },
   conversationsList: {
     flex: 1,
   },
   conversationItem: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingVertical: isTablet ? 20 : 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
     alignItems: 'flex-start',
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    width: isTablet ? 64 : 50,
+    height: isTablet ? 64 : 50,
+    borderRadius: isTablet ? 32 : 25,
+    marginRight: isTablet ? 16 : 12,
   },
   conversationContent: {
     flex: 1,
@@ -188,27 +207,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: isTablet ? 6 : 4,
   },
   participantName: {
-    fontSize: 16,
+    fontSize: isTablet ? 18 : 16,
     fontWeight: '600',
     color: Colors.text,
   },
   timestamp: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
   },
   jobTitle: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.primary,
     fontWeight: '500',
-    marginBottom: 4,
+    marginBottom: isTablet ? 6 : 4,
   },
   lastMessage: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
-    lineHeight: 18,
+    lineHeight: isTablet ? 22 : 18,
   },
   unreadMessage: {
     color: Colors.text,
@@ -216,38 +235,38 @@ const styles = StyleSheet.create({
   },
   conversationActions: {
     alignItems: 'flex-end',
-    gap: 8,
+    gap: isTablet ? 12 : 8,
   },
   unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: isTablet ? 10 : 8,
+    height: isTablet ? 10 : 8,
+    borderRadius: isTablet ? 5 : 4,
     backgroundColor: Colors.primary,
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 8,
+    gap: isTablet ? 12 : 8,
   },
   actionButton: {
-    padding: 6,
+    padding: isTablet ? 8 : 6,
   },
   emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: isTablet ? 60 : 40,
   },
   emptyStateTitle: {
-    fontSize: 18,
+    fontSize: isTablet ? 22 : 18,
     fontWeight: '600',
     color: Colors.text,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: isTablet ? 24 : 16,
+    marginBottom: isTablet ? 12 : 8,
   },
   emptyStateDescription: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: isTablet ? 24 : 20,
   },
 });

@@ -9,7 +9,28 @@ import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Responsive breakpoints
+const isSmallDevice = screenWidth < 375;
+const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
+const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
+const isTablet = screenWidth >= 768;
+
+// Responsive dimensions
+const getResponsiveDimensions = () => {
+  const padding = isTablet ? 32 : isLargeDevice ? 24 : 20;
+  const cardPadding = isTablet ? 24 : 20;
+  const fontSize = {
+    title: isTablet ? 32 : isLargeDevice ? 28 : isSmallDevice ? 24 : 26,
+    subtitle: isTablet ? 20 : isLargeDevice ? 18 : 16,
+    body: isTablet ? 18 : 16,
+    small: isTablet ? 16 : 14,
+    tiny: isTablet ? 14 : 12,
+  };
+  
+  return { padding, cardPadding, fontSize };
+};
 
 // Mock data
 const mockJobs: Job[] = [
@@ -58,6 +79,15 @@ export default function HomeScreen() {
   const { user, loading } = useAuthState();
   const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   useEffect(() => {
     // Mock loading nearby jobs
@@ -87,6 +117,9 @@ export default function HomeScreen() {
     });
   };
 
+  const responsiveDimensions = getResponsiveDimensions();
+  const styles = createStyles(responsiveDimensions, dimensions);
+
   const renderWorkerHome = () => (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <SafeAreaView>
@@ -101,12 +134,12 @@ export default function HomeScreen() {
                 {getGreeting()}, {user?.name?.split(' ')[0]}!
               </Text>
               <View style={styles.locationRow}>
-                <MapPin size={16} color={Colors.white} />
+                <MapPin size={isTablet ? 20 : 16} color={Colors.white} />
                 <Text style={styles.location}>Beirut, Lebanon</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.notificationIcon}>
-              <Bell size={24} color={Colors.white} />
+              <Bell size={isTablet ? 28 : 24} color={Colors.white} />
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationCount}>3</Text>
               </View>
@@ -121,7 +154,7 @@ export default function HomeScreen() {
               colors={[Colors.success, '#32CD32']}
               style={styles.statGradient}
             >
-              <Briefcase size={24} color={Colors.white} />
+              <Briefcase size={isTablet ? 32 : 24} color={Colors.white} />
               <Text style={styles.statValue}>12</Text>
               <Text style={styles.statLabel}>Completed</Text>
             </LinearGradient>
@@ -132,7 +165,7 @@ export default function HomeScreen() {
               colors={[Colors.secondary, Colors.secondaryLight]}
               style={styles.statGradient}
             >
-              <Star size={24} color={Colors.white} />
+              <Star size={isTablet ? 32 : 24} color={Colors.white} />
               <Text style={styles.statValue}>4.8</Text>
               <Text style={styles.statLabel}>Rating</Text>
             </LinearGradient>
@@ -143,7 +176,7 @@ export default function HomeScreen() {
               colors={[Colors.info, '#20B2AA']}
               style={styles.statGradient}
             >
-              <Clock size={24} color={Colors.white} />
+              <Clock size={isTablet ? 32 : 24} color={Colors.white} />
               <Text style={styles.statValue}>3</Text>
               <Text style={styles.statLabel}>Active</Text>
             </LinearGradient>
@@ -159,7 +192,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/jobs')}
             >
               <View style={styles.quickActionIcon}>
-                <TrendingUp size={24} color={Colors.primary} />
+                <TrendingUp size={isTablet ? 32 : 24} color={Colors.primary} />
               </View>
               <Text style={styles.quickActionText}>Browse Jobs</Text>
             </TouchableOpacity>
@@ -169,7 +202,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/profile')}
             >
               <View style={styles.quickActionIcon}>
-                <Users size={24} color={Colors.primary} />
+                <Users size={isTablet ? 32 : 24} color={Colors.primary} />
               </View>
               <Text style={styles.quickActionText}>Update Profile</Text>
             </TouchableOpacity>
@@ -221,7 +254,7 @@ export default function HomeScreen() {
               <Text style={styles.subGreeting}>Find the right worker for your needs</Text>
             </View>
             <TouchableOpacity style={styles.notificationIcon}>
-              <Bell size={24} color={Colors.white} />
+              <Bell size={isTablet ? 28 : 24} color={Colors.white} />
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationCount}>2</Text>
               </View>
@@ -239,7 +272,7 @@ export default function HomeScreen() {
               style={styles.postJobButton}
               onPress={() => router.push('/(tabs)/jobs/post')}
             >
-              <Plus size={28} color={Colors.white} />
+              <Plus size={isTablet ? 32 : 28} color={Colors.white} />
               <View style={styles.ctaContent}>
                 <Text style={styles.ctaTitle}>Post a New Job</Text>
                 <Text style={styles.ctaSubtitle}>Get connected with skilled workers</Text>
@@ -255,7 +288,7 @@ export default function HomeScreen() {
               colors={[Colors.primary, Colors.primaryLight]}
               style={styles.statGradient}
             >
-              <Briefcase size={24} color={Colors.white} />
+              <Briefcase size={isTablet ? 32 : 24} color={Colors.white} />
               <Text style={styles.statValue}>5</Text>
               <Text style={styles.statLabel}>Jobs Posted</Text>
             </LinearGradient>
@@ -266,7 +299,7 @@ export default function HomeScreen() {
               colors={[Colors.secondary, Colors.secondaryLight]}
               style={styles.statGradient}
             >
-              <Star size={24} color={Colors.white} />
+              <Star size={isTablet ? 32 : 24} color={Colors.white} />
               <Text style={styles.statValue}>4.6</Text>
               <Text style={styles.statLabel}>Rating</Text>
             </LinearGradient>
@@ -277,7 +310,7 @@ export default function HomeScreen() {
               colors={[Colors.success, '#32CD32']}
               style={styles.statGradient}
             >
-              <DollarSign size={24} color={Colors.white} />
+              <DollarSign size={isTablet ? 32 : 24} color={Colors.white} />
               <Text style={styles.statValue}>$2.4k</Text>
               <Text style={styles.statLabel}>Spent</Text>
             </LinearGradient>
@@ -325,7 +358,7 @@ export default function HomeScreen() {
   return user.userType === 'worker' ? renderWorkerHome() : renderClientHome();
 }
 
-const styles = StyleSheet.create({
+const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -339,51 +372,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingTitle: {
-    fontSize: 36,
+    fontSize: responsiveDimensions.fontSize.title + 8,
     fontWeight: 'bold',
     color: Colors.white,
     marginBottom: 8,
   },
   loadingSubtitle: {
-    fontSize: 18,
+    fontSize: responsiveDimensions.fontSize.subtitle,
     color: Colors.white,
     opacity: 0.9,
     marginBottom: 40,
   },
   loadingIndicator: {
     backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingHorizontal: isTablet ? 32 : 24,
+    paddingVertical: isTablet ? 16 : 12,
     borderRadius: 25,
   },
   loadingText: {
     color: Colors.white,
-    fontSize: 16,
+    fontSize: responsiveDimensions.fontSize.body,
     fontWeight: '500',
   },
   headerGradient: {
-    paddingBottom: 30,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
+    paddingBottom: isTablet ? 40 : 30,
+    borderBottomLeftRadius: isTablet ? 35 : 25,
+    borderBottomRightRadius: isTablet ? 35 : 25,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: responsiveDimensions.padding,
+    paddingTop: isTablet ? 24 : 16,
   },
   headerContent: {
     flex: 1,
   },
   greeting: {
-    fontSize: 28,
+    fontSize: responsiveDimensions.fontSize.title,
     fontWeight: 'bold',
     color: Colors.white,
     marginBottom: 8,
   },
   subGreeting: {
-    fontSize: 16,
+    fontSize: responsiveDimensions.fontSize.body,
     color: Colors.white,
     opacity: 0.9,
   },
@@ -393,41 +426,41 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   location: {
-    fontSize: 14,
+    fontSize: responsiveDimensions.fontSize.small,
     color: Colors.white,
     marginLeft: 6,
     opacity: 0.9,
   },
   notificationIcon: {
     position: 'relative',
-    padding: 8,
+    padding: isTablet ? 12 : 8,
   },
   notificationBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: isTablet ? 8 : 4,
+    right: isTablet ? 8 : 4,
     backgroundColor: Colors.accent,
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    borderRadius: isTablet ? 12 : 10,
+    width: isTablet ? 24 : 20,
+    height: isTablet ? 24 : 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   notificationCount: {
-    fontSize: 12,
+    fontSize: responsiveDimensions.fontSize.tiny,
     color: Colors.white,
     fontWeight: 'bold',
   },
   statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: -15,
-    marginBottom: 24,
-    gap: 12,
+    flexDirection: isTablet ? 'row' : 'row',
+    paddingHorizontal: responsiveDimensions.padding,
+    marginTop: isTablet ? -20 : -15,
+    marginBottom: isTablet ? 32 : 24,
+    gap: isTablet ? 16 : 12,
   },
   statCard: {
     flex: 1,
-    borderRadius: 16,
+    borderRadius: isTablet ? 20 : 16,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -435,36 +468,36 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   statGradient: {
-    padding: 20,
-    borderRadius: 16,
+    padding: responsiveDimensions.cardPadding,
+    borderRadius: isTablet ? 20 : 16,
     alignItems: 'center',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
     fontWeight: 'bold',
     color: Colors.white,
-    marginTop: 8,
+    marginTop: isTablet ? 12 : 8,
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: responsiveDimensions.fontSize.tiny,
     color: Colors.white,
     textAlign: 'center',
     opacity: 0.9,
   },
   quickActionsContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: responsiveDimensions.padding,
+    marginBottom: isTablet ? 32 : 24,
   },
   quickActions: {
-    flexDirection: 'row',
-    gap: 12,
+    flexDirection: isTablet ? 'row' : 'row',
+    gap: isTablet ? 16 : 12,
   },
   quickActionCard: {
     flex: 1,
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: isTablet ? 16 : 12,
+    padding: isTablet ? 24 : 16,
     alignItems: 'center',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },
@@ -473,27 +506,27 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   quickActionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: isTablet ? 64 : 48,
+    height: isTablet ? 64 : 48,
+    borderRadius: isTablet ? 32 : 24,
     backgroundColor: Colors.backgroundSecondary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: isTablet ? 12 : 8,
   },
   quickActionText: {
-    fontSize: 14,
+    fontSize: responsiveDimensions.fontSize.small,
     fontWeight: '500',
     color: Colors.text,
     textAlign: 'center',
   },
   ctaContainer: {
-    paddingHorizontal: 20,
-    marginTop: -15,
-    marginBottom: 24,
+    paddingHorizontal: responsiveDimensions.padding,
+    marginTop: isTablet ? -20 : -15,
+    marginBottom: isTablet ? 32 : 24,
   },
   ctaGradient: {
-    borderRadius: 16,
+    borderRadius: isTablet ? 20 : 16,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -503,47 +536,47 @@ const styles = StyleSheet.create({
   postJobButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
+    padding: responsiveDimensions.cardPadding,
   },
   ctaContent: {
-    marginLeft: 16,
+    marginLeft: isTablet ? 20 : 16,
     flex: 1,
   },
   ctaTitle: {
-    fontSize: 18,
+    fontSize: responsiveDimensions.fontSize.subtitle,
     fontWeight: 'bold',
     color: Colors.white,
     marginBottom: 4,
   },
   ctaSubtitle: {
-    fontSize: 14,
+    fontSize: responsiveDimensions.fontSize.small,
     color: Colors.white,
     opacity: 0.9,
   },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: responsiveDimensions.padding,
+    marginBottom: isTablet ? 32 : 24,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: isTablet ? 20 : 16,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: responsiveDimensions.fontSize.subtitle,
     fontWeight: 'bold',
     color: Colors.text,
   },
   viewAll: {
-    fontSize: 14,
+    fontSize: responsiveDimensions.fontSize.small,
     color: Colors.primary,
     fontWeight: '600',
   },
   loadingJobs: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 24,
+    borderRadius: isTablet ? 16 : 12,
+    padding: isTablet ? 32 : 24,
     alignItems: 'center',
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 2 },

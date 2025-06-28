@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Search, Filter, MapPin, Plus, SlidersHorizontal } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
@@ -8,6 +8,14 @@ import FilterModal from '@/components/FilterModal';
 import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+// Responsive breakpoints
+const isSmallDevice = screenWidth < 375;
+const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
+const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
+const isTablet = screenWidth >= 768;
 
 // Mock data - same as home screen for consistency
 const mockJobs: Job[] = [
@@ -83,6 +91,15 @@ export default function JobsScreen() {
     budgetRange: { min: 0, max: 1000 },
     location: '',
   });
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -170,20 +187,22 @@ export default function JobsScreen() {
     });
   };
 
+  const styles = createStyles(dimensions);
+
   const renderWorkerJobs = () => (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <SafeAreaView>
         <View style={styles.header}>
           <Text style={styles.title}>{i18n.t('findJobs')}</Text>
           <TouchableOpacity style={styles.locationButton}>
-            <MapPin size={16} color={Colors.primary} />
+            <MapPin size={isTablet ? 20 : 16} color={Colors.primary} />
             <Text style={styles.locationText}>Beirut</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.searchContainer}>
           <View style={styles.searchInputContainer}>
-            <Search size={20} color={Colors.textSecondary} />
+            <Search size={isTablet ? 24 : 20} color={Colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search jobs, skills..."
@@ -195,7 +214,7 @@ export default function JobsScreen() {
             style={[styles.filterButton, hasActiveFilters() && styles.filterButtonActive]}
             onPress={() => setShowFilterModal(true)}
           >
-            <SlidersHorizontal size={20} color={hasActiveFilters() ? Colors.white : Colors.primary} />
+            <SlidersHorizontal size={isTablet ? 24 : 20} color={hasActiveFilters() ? Colors.white : Colors.primary} />
           </TouchableOpacity>
         </View>
 
@@ -245,7 +264,7 @@ export default function JobsScreen() {
             style={styles.postJobButton}
             onPress={() => router.push('/(tabs)/jobs/post') as any}
           >
-            <Plus size={20} color={Colors.white} />
+            <Plus size={isTablet ? 24 : 20} color={Colors.white} />
             <Text style={styles.postJobButtonText}>Post Job</Text>
           </TouchableOpacity>
         </View>
@@ -286,7 +305,7 @@ export default function JobsScreen() {
   return user.userType === 'worker' ? renderWorkerJobs() : renderClientJobs();
 }
 
-const styles = StyleSheet.create({
+const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -300,12 +319,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingTop: isTablet ? 24 : 16,
+    paddingBottom: isTablet ? 28 : 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
     fontWeight: 'bold',
     color: Colors.text,
   },
@@ -313,13 +332,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: isTablet ? 16 : 12,
+    paddingVertical: isTablet ? 10 : 6,
+    borderRadius: isTablet ? 20 : 16,
     gap: 4,
   },
   locationText: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.primary,
     fontWeight: '500',
   },
@@ -327,47 +346,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: isTablet ? 20 : 16,
+    paddingVertical: isTablet ? 12 : 8,
+    borderRadius: isTablet ? 12 : 8,
     gap: 6,
   },
   postJobButtonText: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.white,
     fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    gap: 12,
+    paddingHorizontal: isTablet ? 32 : 20,
+    marginBottom: isTablet ? 28 : 20,
+    gap: isTablet ? 16 : 12,
   },
   searchInputContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderRadius: isTablet ? 12 : 8,
+    paddingHorizontal: isTablet ? 20 : 16,
+    paddingVertical: isTablet ? 16 : 12,
     borderWidth: 1,
     borderColor: Colors.border,
-    gap: 12,
+    gap: isTablet ? 16 : 12,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: isTablet ? 18 : 16,
     color: Colors.text,
   },
   filterButton: {
     backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: isTablet ? 12 : 8,
+    padding: isTablet ? 16 : 12,
     borderWidth: 1,
     borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: isTablet ? 56 : 48,
   },
   filterButtonActive: {
     backgroundColor: Colors.primary,
@@ -377,35 +397,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    paddingHorizontal: isTablet ? 32 : 20,
+    marginBottom: isTablet ? 20 : 16,
   },
   activeFiltersText: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
   },
   clearFiltersText: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.primary,
     fontWeight: '500',
   },
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    gap: 8,
+    paddingHorizontal: isTablet ? 32 : 20,
+    marginBottom: isTablet ? 28 : 20,
+    gap: isTablet ? 12 : 8,
   },
   tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: isTablet ? 20 : 16,
+    paddingVertical: isTablet ? 12 : 8,
+    borderRadius: isTablet ? 24 : 20,
     backgroundColor: Colors.backgroundSecondary,
   },
   activeTab: {
     backgroundColor: Colors.primary,
   },
   tabText: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
     fontWeight: '500',
   },
@@ -413,13 +433,13 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   jobsList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: isTablet ? 32 : 20,
   },
   resultsHeader: {
-    marginBottom: 16,
+    marginBottom: isTablet ? 20 : 16,
   },
   resultsCount: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
   },
 });

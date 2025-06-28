@@ -1,10 +1,18 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { MapPin, Clock, DollarSign, Star, CircleAlert as AlertCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+// Responsive breakpoints
+const isSmallDevice = screenWidth < 375;
+const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
+const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
+const isTablet = screenWidth >= 768;
 
 interface JobCardProps {
   job: Job;
@@ -57,6 +65,8 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
     }
   };
 
+  const styles = createStyles();
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Urgency Indicator */}
@@ -78,32 +88,32 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
             </View>
             {job.urgency === 'high' && (
               <View style={styles.urgencyIcon}>
-                <AlertCircle size={16} color={Colors.error} />
+                <AlertCircle size={isTablet ? 20 : 16} color={Colors.error} />
               </View>
             )}
           </View>
         </View>
 
-        <Text style={styles.description} numberOfLines={3}>
+        <Text style={styles.description} numberOfLines={isTablet ? 4 : 3}>
           {job.description}
         </Text>
 
         <View style={styles.skillsContainer}>
-          {job.requiredSkills.slice(0, 3).map((skill, index) => (
+          {job.requiredSkills.slice(0, isTablet ? 4 : 3).map((skill, index) => (
             <View key={index} style={styles.skillChip}>
               <Text style={styles.skillText}>{skill}</Text>
             </View>
           ))}
-          {job.requiredSkills.length > 3 && (
+          {job.requiredSkills.length > (isTablet ? 4 : 3) && (
             <View style={styles.moreSkillsChip}>
-              <Text style={styles.moreSkillsText}>+{job.requiredSkills.length - 3}</Text>
+              <Text style={styles.moreSkillsText}>+{job.requiredSkills.length - (isTablet ? 4 : 3)}</Text>
             </View>
           )}
         </View>
 
         <View style={styles.footer}>
           <View style={styles.infoRow}>
-            <MapPin size={14} color={Colors.textSecondary} />
+            <MapPin size={isTablet ? 16 : 14} color={Colors.textSecondary} />
             <Text style={styles.infoText}>
               {job.location.city}
               {showDistance && distance && ` • ${distance.toFixed(1)}km`}
@@ -111,12 +121,12 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
           </View>
 
           <View style={styles.infoRow}>
-            <Clock size={14} color={Colors.textSecondary} />
+            <Clock size={isTablet ? 16 : 14} color={Colors.textSecondary} />
             <Text style={styles.infoText}>{job.duration}h</Text>
           </View>
 
           <View style={styles.budgetContainer}>
-            <DollarSign size={14} color={Colors.success} />
+            <DollarSign size={isTablet ? 16 : 14} color={Colors.success} />
             <Text style={styles.budgetText}>
               ${job.budget.min}-${job.budget.max}
             </Text>
@@ -140,11 +150,11 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = () => StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: isTablet ? 20 : 16,
+    marginBottom: isTablet ? 20 : 16,
     shadowColor: Colors.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -160,24 +170,24 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 4,
+    height: isTablet ? 6 : 4,
   },
   content: {
-    padding: 20,
+    padding: isTablet ? 24 : 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: isTablet ? 16 : 12,
   },
   title: {
-    fontSize: 18,
+    fontSize: isTablet ? 22 : isLargeDevice ? 18 : isSmallDevice ? 16 : 17,
     fontWeight: 'bold',
     color: Colors.text,
     flex: 1,
     marginRight: 12,
-    lineHeight: 24,
+    lineHeight: isTablet ? 28 : 24,
   },
   badges: {
     flexDirection: 'row',
@@ -185,12 +195,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: isTablet ? 12 : 10,
+    paddingVertical: isTablet ? 6 : 4,
+    borderRadius: isTablet ? 14 : 12,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: isTablet ? 12 : 11,
     color: Colors.white,
     fontWeight: '600',
   },
@@ -198,55 +208,58 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   description: {
-    fontSize: 14,
+    fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 16,
+    lineHeight: isTablet ? 24 : 20,
+    marginBottom: isTablet ? 20 : 16,
   },
   skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 16,
+    marginBottom: isTablet ? 20 : 16,
     alignItems: 'center',
-    gap: 6,
+    gap: isTablet ? 8 : 6,
   },
   skillChip: {
     backgroundColor: Colors.backgroundTertiary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: isTablet ? 12 : 10,
+    paddingVertical: isTablet ? 8 : 6,
+    borderRadius: isTablet ? 14 : 12,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   skillText: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.text,
     fontWeight: '500',
   },
   moreSkillsChip: {
     backgroundColor: Colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: isTablet ? 12 : 10,
+    paddingVertical: isTablet ? 8 : 6,
+    borderRadius: isTablet ? 14 : 12,
   },
   moreSkillsText: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.white,
     fontWeight: '600',
   },
   footer: {
-    flexDirection: 'row',
+    flexDirection: isTablet ? 'row' : 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: isTablet ? 16 : 12,
+    flexWrap: isSmallDevice ? 'wrap' : 'nowrap',
+    gap: isSmallDevice ? 8 : 0,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    flex: isTablet ? 1 : isSmallDevice ? 0 : 1,
+    minWidth: isSmallDevice ? '45%' : 'auto',
   },
   infoText: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
     marginLeft: 6,
     fontWeight: '500',
@@ -255,12 +268,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: isTablet ? 12 : 8,
+    paddingVertical: isTablet ? 6 : 4,
+    borderRadius: isTablet ? 10 : 8,
   },
   budgetText: {
-    fontSize: 12,
+    fontSize: isTablet ? 14 : 12,
     color: Colors.success,
     marginLeft: 4,
     fontWeight: 'bold',
@@ -269,12 +282,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   urgencyBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: isTablet ? 16 : 12,
+    paddingVertical: isTablet ? 8 : 6,
+    borderRadius: isTablet ? 14 : 12,
   },
   urgencyText: {
-    fontSize: 11,
+    fontSize: isTablet ? 12 : 11,
     color: Colors.white,
     fontWeight: 'bold',
   },

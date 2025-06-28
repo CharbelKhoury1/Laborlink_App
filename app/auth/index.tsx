@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Users, Briefcase } from 'lucide-react-native';
@@ -7,13 +7,48 @@ import Colors from '@/constants/Colors';
 import LanguageSelector from '@/components/LanguageSelector';
 import i18n from '@/utils/i18n';
 
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Responsive breakpoints
+const isSmallDevice = screenWidth < 375;
+const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
+const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
+const isTablet = screenWidth >= 768;
+
+// Responsive dimensions
+const getResponsiveDimensions = () => {
+  const padding = isTablet ? 40 : isLargeDevice ? 24 : 20;
+  const cardPadding = isTablet ? 32 : 24;
+  const fontSize = {
+    logo: isTablet ? 48 : isLargeDevice ? 36 : isSmallDevice ? 28 : 32,
+    subtitle: isTablet ? 24 : isLargeDevice ? 18 : 16,
+    body: isTablet ? 20 : isLargeDevice ? 16 : 14,
+    title: isTablet ? 28 : isLargeDevice ? 20 : 18,
+    small: isTablet ? 16 : 14,
+  };
+  
+  return { padding, cardPadding, fontSize };
+};
+
 export default function AuthIndex() {
   const router = useRouter();
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+
+    return () => subscription?.remove();
+  }, []);
 
   const handleUserTypeSelect = (userType: 'worker' | 'client') => {
     router.push(`/auth/register?userType=${userType}`);
   };
+
+  const responsiveDimensions = getResponsiveDimensions();
+  const styles = createStyles(responsiveDimensions, dimensions);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -21,7 +56,10 @@ export default function AuthIndex() {
         colors={[Colors.primary, Colors.primaryLight]}
         style={styles.gradient}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.header}>
             <LanguageSelector
               currentLanguage={language}
@@ -51,7 +89,7 @@ export default function AuthIndex() {
                 style={styles.userTypeCard}
                 onPress={() => handleUserTypeSelect('worker')}
               >
-                <Users size={48} color={Colors.primary} />
+                <Users size={isTablet ? 64 : isLargeDevice ? 48 : 40} color={Colors.primary} />
                 <Text style={styles.userTypeTitle}>
                   {i18n.t('worker')}
                 </Text>
@@ -64,7 +102,7 @@ export default function AuthIndex() {
                 style={styles.userTypeCard}
                 onPress={() => handleUserTypeSelect('client')}
               >
-                <Briefcase size={48} color={Colors.primary} />
+                <Briefcase size={isTablet ? 64 : isLargeDevice ? 48 : 40} color={Colors.primary} />
                 <Text style={styles.userTypeTitle}>
                   {i18n.t('client')}
                 </Text>
@@ -92,7 +130,7 @@ export default function AuthIndex() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -101,57 +139,61 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    minHeight: dimensions.height,
   },
   header: {
     alignItems: 'flex-end',
-    padding: 20,
+    padding: responsiveDimensions.padding,
+    paddingTop: isTablet ? 40 : 20,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingHorizontal: responsiveDimensions.padding,
+    paddingBottom: isTablet ? 60 : 40,
+    justifyContent: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: isTablet ? 40 : 30,
   },
   logo: {
-    fontSize: 36,
+    fontSize: responsiveDimensions.fontSize.logo,
     fontWeight: 'bold',
     color: Colors.white,
     textAlign: 'center',
+    marginBottom: isTablet ? 12 : 8,
   },
   logoSubtitle: {
-    fontSize: 18,
+    fontSize: responsiveDimensions.fontSize.subtitle,
     color: Colors.white,
     opacity: 0.9,
     textAlign: 'center',
   },
   tagline: {
-    fontSize: 16,
+    fontSize: responsiveDimensions.fontSize.body,
     color: Colors.white,
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: isTablet ? 60 : 40,
     opacity: 0.9,
-    lineHeight: 24,
+    lineHeight: isTablet ? 32 : 24,
+    paddingHorizontal: isTablet ? 40 : 0,
   },
   userTypeContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    marginBottom: isTablet ? 50 : 30,
   },
   selectTitle: {
-    fontSize: 18,
+    fontSize: responsiveDimensions.fontSize.subtitle,
     color: Colors.white,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: isTablet ? 40 : 30,
     fontWeight: '600',
   },
   userTypeCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: isTablet ? 24 : 16,
+    padding: responsiveDimensions.cardPadding,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: isTablet ? 24 : 16,
     shadowColor: Colors.black,
     shadowOffset: {
       width: 0,
@@ -160,26 +202,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+    minHeight: isTablet ? 180 : isLargeDevice ? 140 : 120,
+    justifyContent: 'center',
   },
   userTypeTitle: {
-    fontSize: 20,
+    fontSize: responsiveDimensions.fontSize.title,
     fontWeight: '600',
     color: Colors.text,
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: isTablet ? 20 : 12,
+    marginBottom: isTablet ? 12 : 8,
   },
   userTypeDescription: {
-    fontSize: 14,
+    fontSize: responsiveDimensions.fontSize.small,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: isTablet ? 24 : 20,
+    paddingHorizontal: isTablet ? 20 : 0,
   },
   loginLink: {
-    marginTop: 30,
     alignItems: 'center',
+    marginTop: isTablet ? 40 : 30,
   },
   loginText: {
-    fontSize: 14,
+    fontSize: responsiveDimensions.fontSize.small,
     color: Colors.white,
     textDecorationLine: 'underline',
   },

@@ -1,44 +1,74 @@
 const Colors = {
-  primary: '#228B22', // Cedar Green
-  primaryLight: '#32CD32',
-  primaryDark: '#006400',
+  // Modern primary palette
+  primary: '#6366F1', // Indigo
+  primaryLight: '#818CF8',
+  primaryDark: '#4F46E5',
   
-  secondary: '#DAA520', // Gold
-  secondaryLight: '#FFD700',
-  secondaryDark: '#B8860B',
+  // Secondary palette
+  secondary: '#F59E0B', // Amber
+  secondaryLight: '#FCD34D',
+  secondaryDark: '#D97706',
   
-  accent: '#DC143C', // Lebanese Red
-  accentLight: '#FF6B6B',
+  // Accent palette
+  accent: '#EF4444', // Red
+  accentLight: '#F87171',
+  accentDark: '#DC2626',
   
-  background: '#FFFFFF',
-  backgroundSecondary: '#F8F9FA',
-  backgroundTertiary: '#E9ECEF',
+  // Modern background system
+  background: '#FAFBFC',
+  backgroundSecondary: '#F8FAFC',
+  backgroundTertiary: '#F1F5F9',
   
-  text: '#212529',
-  textSecondary: '#6C757D',
-  textLight: '#ADB5BD',
+  // Surface colors
+  surface: '#FFFFFF',
+  surfaceElevated: '#F8FAFC',
+  surfaceHover: '#F1F5F9',
   
-  border: '#DEE2E6',
-  borderLight: '#E9ECEF',
+  // Text colors
+  text: '#1F2937',
+  textSecondary: '#6B7280',
+  textLight: '#9CA3AF',
+  textInverse: '#FFFFFF',
   
-  success: '#28A745',
-  warning: '#FFC107',
-  error: '#DC3545',
-  info: '#17A2B8',
-  
-  white: '#FFFFFF',
-  black: '#000000',
+  // Border colors
+  border: '#E5E7EB',
+  borderLight: '#F3F4F6',
+  borderDark: '#D1D5DB',
   
   // Status colors
-  statusOpen: '#17A2B8',
-  statusAssigned: '#FFC107',
-  statusInProgress: '#6F42C1',
-  statusCompleted: '#28A745',
-  statusCancelled: '#DC3545',
+  success: '#10B981', // Emerald
+  successLight: '#34D399',
+  warning: '#F59E0B', // Amber
+  warningLight: '#FCD34D',
+  error: '#EF4444', // Red
+  errorLight: '#F87171',
+  info: '#3B82F6', // Blue
+  infoLight: '#60A5FA',
+  
+  // Legacy status colors (for compatibility)
+  statusOpen: '#3B82F6',
+  statusAssigned: '#F59E0B',
+  statusInProgress: '#6366F1',
+  statusCompleted: '#10B981',
+  statusCancelled: '#EF4444',
+  
+  // Utility colors
+  white: '#FFFFFF',
+  black: '#000000',
+  transparent: 'transparent',
+  
+  // Shadow colors
+  shadow: 'rgba(0, 0, 0, 0.1)',
+  shadowDark: 'rgba(0, 0, 0, 0.2)',
+  shadowLight: 'rgba(0, 0, 0, 0.05)',
   
   // Rating colors
-  ratingGold: '#FFD700',
-  ratingEmpty: '#E9ECEF',
+  ratingGold: '#F59E0B',
+  ratingEmpty: '#E5E7EB',
+  
+  // Gradient colors
+  gradientStart: '#6366F1',
+  gradientEnd: '#F59E0B',
 };
 
 export default Colors;

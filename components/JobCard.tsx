@@ -1,12 +1,32 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { MapPin, Clock, DollarSign, Star, CircleAlert as AlertCircle } from 'lucide-react-native';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Animated } from 'react-native';
+import { MapPin, Clock, DollarSign, Star, CircleAlert as AlertCircle, TrendingUp } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 
 const { width: screenWidth } = Dimensions.get('window');
+
+// Modern color palette
+const modernColors = {
+  primary: '#6366F1',
+  primaryLight: '#818CF8',
+  secondary: '#F59E0B',
+  secondaryLight: '#FCD34D',
+  accent: '#EF4444',
+  accentLight: '#F87171',
+  success: '#10B981',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  background: '#FAFBFC',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F8FAFC',
+  text: '#1F2937',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB',
+  shadow: 'rgba(0, 0, 0, 0.1)',
+};
 
 // Responsive breakpoints
 const isSmallDevice = screenWidth < 375;
@@ -21,76 +41,124 @@ interface JobCardProps {
   distance?: number;
 }
 
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+
 export default function JobCard({ job, onPress, showDistance, distance }: JobCardProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Entrance animation
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
+
   const getStatusColor = () => {
     switch (job.status) {
       case 'open':
-        return Colors.statusOpen;
+        return modernColors.info;
       case 'assigned':
-        return Colors.statusAssigned;
+        return modernColors.warning;
       case 'in_progress':
-        return Colors.statusInProgress;
+        return modernColors.primary;
       case 'completed':
-        return Colors.statusCompleted;
+        return modernColors.success;
       case 'cancelled':
-        return Colors.statusCancelled;
+        return modernColors.accent;
       default:
-        return Colors.textSecondary;
+        return modernColors.textSecondary;
     }
   };
 
   const getUrgencyColor = () => {
     switch (job.urgency) {
       case 'high':
-        return Colors.error;
+        return modernColors.accent;
       case 'medium':
-        return Colors.warning;
+        return modernColors.warning;
       case 'low':
-        return Colors.success;
+        return modernColors.success;
       default:
-        return Colors.textSecondary;
+        return modernColors.textSecondary;
     }
   };
 
   const getUrgencyGradient = () => {
     switch (job.urgency) {
       case 'high':
-        return [Colors.error, '#FF6B6B'];
+        return [modernColors.accent, modernColors.accentLight];
       case 'medium':
-        return [Colors.warning, '#FFD93D'];
+        return [modernColors.warning, modernColors.secondaryLight];
       case 'low':
-        return [Colors.success, '#6BCF7F'];
+        return [modernColors.success, '#34D399'];
       default:
-        return [Colors.textSecondary, Colors.textLight];
+        return [modernColors.textSecondary, '#9CA3AF'];
     }
   };
 
   const styles = createStyles();
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-      {/* Urgency Indicator */}
+    <AnimatedTouchableOpacity 
+      style={[
+        styles.container,
+        {
+          opacity: fadeAnim,
+          transform: [{ scale: scaleAnim }],
+        },
+      ]} 
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      activeOpacity={1}
+    >
+      {/* Enhanced Urgency Indicator */}
       {job.urgency === 'high' && (
         <LinearGradient
           colors={getUrgencyGradient()}
           style={styles.urgencyStripe}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
         />
       )}
       
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title} numberOfLines={2}>
-            {job.title}
-          </Text>
-          <View style={styles.badges}>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor() }]}>
-              <Text style={styles.statusText}>{i18n.t(job.status)}</Text>
-            </View>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title} numberOfLines={2}>
+              {job.title}
+            </Text>
             {job.urgency === 'high' && (
-              <View style={styles.urgencyIcon}>
-                <AlertCircle size={isTablet ? 20 : 16} color={Colors.error} />
+              <View style={styles.urgencyIndicator}>
+                <AlertCircle size={isTablet ? 18 : 16} color={modernColors.accent} />
+                <Text style={styles.urgencyLabel}>Urgent</Text>
               </View>
             )}
+          </View>
+          <View style={styles.badges}>
+            <LinearGradient
+              colors={[getStatusColor(), getStatusColor() + '80']}
+              style={styles.statusBadge}
+            >
+              <Text style={styles.statusText}>{i18n.t(job.status)}</Text>
+            </LinearGradient>
           </View>
         </View>
 
@@ -105,32 +173,40 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
             </View>
           ))}
           {job.requiredSkills.length > (isTablet ? 4 : 3) && (
-            <View style={styles.moreSkillsChip}>
+            <LinearGradient
+              colors={[modernColors.primary, modernColors.primaryLight]}
+              style={styles.moreSkillsChip}
+            >
               <Text style={styles.moreSkillsText}>+{job.requiredSkills.length - (isTablet ? 4 : 3)}</Text>
-            </View>
+            </LinearGradient>
           )}
         </View>
 
         <View style={styles.footer}>
           <View style={styles.infoRow}>
-            <MapPin size={isTablet ? 16 : 14} color={Colors.textSecondary} />
-            <Text style={styles.infoText}>
-              {job.location.city}
-              {showDistance && distance && ` • ${distance.toFixed(1)}km`}
-            </Text>
+            <View style={styles.infoItem}>
+              <MapPin size={isTablet ? 16 : 14} color={modernColors.textSecondary} />
+              <Text style={styles.infoText}>
+                {job.location.city}
+                {showDistance && distance && ` • ${distance.toFixed(1)}km`}
+              </Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Clock size={isTablet ? 16 : 14} color={modernColors.textSecondary} />
+              <Text style={styles.infoText}>{job.duration}h</Text>
+            </View>
           </View>
 
-          <View style={styles.infoRow}>
-            <Clock size={isTablet ? 16 : 14} color={Colors.textSecondary} />
-            <Text style={styles.infoText}>{job.duration}h</Text>
-          </View>
-
-          <View style={styles.budgetContainer}>
-            <DollarSign size={isTablet ? 16 : 14} color={Colors.success} />
+          <LinearGradient
+            colors={[modernColors.success, '#34D399']}
+            style={styles.budgetContainer}
+          >
+            <DollarSign size={isTablet ? 16 : 14} color={modernColors.surface} />
             <Text style={styles.budgetText}>
               ${job.budget.min}-${job.budget.max}
             </Text>
-          </View>
+          </LinearGradient>
         </View>
 
         {job.urgency !== 'low' && (
@@ -139,6 +215,7 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
               colors={getUrgencyGradient()}
               style={styles.urgencyBadge}
             >
+              <TrendingUp size={12} color={modernColors.surface} />
               <Text style={styles.urgencyText}>
                 {job.urgency.charAt(0).toUpperCase() + job.urgency.slice(1)} Priority
               </Text>
@@ -146,22 +223,22 @@ export default function JobCard({ job, onPress, showDistance, distance }: JobCar
           </View>
         )}
       </View>
-    </TouchableOpacity>
+    </AnimatedTouchableOpacity>
   );
 }
 
 const createStyles = () => StyleSheet.create({
   container: {
-    backgroundColor: Colors.white,
-    borderRadius: isTablet ? 20 : 16,
+    backgroundColor: modernColors.surface,
+    borderRadius: isTablet ? 24 : 20,
     marginBottom: isTablet ? 20 : 16,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 16,
+    elevation: 8,
     borderWidth: 1,
-    borderColor: Colors.borderLight,
+    borderColor: modernColors.border,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -173,7 +250,7 @@ const createStyles = () => StyleSheet.create({
     height: isTablet ? 6 : 4,
   },
   content: {
-    padding: isTablet ? 24 : 20,
+    padding: isTablet ? 28 : 24,
   },
   header: {
     flexDirection: 'row',
@@ -181,37 +258,57 @@ const createStyles = () => StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: isTablet ? 16 : 12,
   },
-  title: {
-    fontSize: isTablet ? 22 : isLargeDevice ? 18 : isSmallDevice ? 16 : 17,
-    fontWeight: 'bold',
-    color: Colors.text,
+  titleContainer: {
     flex: 1,
     marginRight: 12,
-    lineHeight: isTablet ? 28 : 24,
   },
-  badges: {
+  title: {
+    fontSize: isTablet ? 24 : isLargeDevice ? 20 : isSmallDevice ? 18 : 19,
+    fontWeight: '800',
+    color: modernColors.text,
+    lineHeight: isTablet ? 32 : 26,
+    letterSpacing: -0.3,
+    marginBottom: 8,
+  },
+  urgencyIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: modernColors.surfaceElevated,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  urgencyLabel: {
+    fontSize: 11,
+    color: modernColors.accent,
+    fontWeight: '700',
+  },
+  badges: {
+    alignItems: 'flex-end',
   },
   statusBadge: {
-    paddingHorizontal: isTablet ? 12 : 10,
-    paddingVertical: isTablet ? 6 : 4,
-    borderRadius: isTablet ? 14 : 12,
+    paddingHorizontal: isTablet ? 14 : 12,
+    paddingVertical: isTablet ? 8 : 6,
+    borderRadius: isTablet ? 16 : 14,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statusText: {
     fontSize: isTablet ? 12 : 11,
-    color: Colors.white,
-    fontWeight: '600',
-  },
-  urgencyIcon: {
-    padding: 2,
+    color: modernColors.surface,
+    fontWeight: '700',
   },
   description: {
-    fontSize: isTablet ? 16 : 14,
-    color: Colors.textSecondary,
-    lineHeight: isTablet ? 24 : 20,
+    fontSize: isTablet ? 16 : 15,
+    color: modernColors.textSecondary,
+    lineHeight: isTablet ? 24 : 22,
     marginBottom: isTablet ? 20 : 16,
+    fontWeight: '500',
   },
   skillsContainer: {
     flexDirection: 'row',
@@ -221,74 +318,91 @@ const createStyles = () => StyleSheet.create({
     gap: isTablet ? 8 : 6,
   },
   skillChip: {
-    backgroundColor: Colors.backgroundTertiary,
-    paddingHorizontal: isTablet ? 12 : 10,
+    backgroundColor: modernColors.surfaceElevated,
+    paddingHorizontal: isTablet ? 14 : 12,
     paddingVertical: isTablet ? 8 : 6,
-    borderRadius: isTablet ? 14 : 12,
+    borderRadius: isTablet ? 16 : 14,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: modernColors.border,
   },
   skillText: {
     fontSize: isTablet ? 14 : 12,
-    color: Colors.text,
-    fontWeight: '500',
+    color: modernColors.text,
+    fontWeight: '600',
   },
   moreSkillsChip: {
-    backgroundColor: Colors.primary,
-    paddingHorizontal: isTablet ? 12 : 10,
+    paddingHorizontal: isTablet ? 14 : 12,
     paddingVertical: isTablet ? 8 : 6,
-    borderRadius: isTablet ? 14 : 12,
+    borderRadius: isTablet ? 16 : 14,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   moreSkillsText: {
     fontSize: isTablet ? 14 : 12,
-    color: Colors.white,
-    fontWeight: '600',
+    color: modernColors.surface,
+    fontWeight: '700',
   },
   footer: {
-    flexDirection: isTablet ? 'row' : 'row',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: isTablet ? 16 : 12,
-    flexWrap: isSmallDevice ? 'wrap' : 'nowrap',
-    gap: isSmallDevice ? 8 : 0,
   },
   infoRow: {
+    flexDirection: isTablet ? 'row' : 'column',
+    gap: isTablet ? 16 : 8,
+    flex: 1,
+  },
+  infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: isTablet ? 1 : isSmallDevice ? 0 : 1,
-    minWidth: isSmallDevice ? '45%' : 'auto',
+    gap: 6,
   },
   infoText: {
-    fontSize: isTablet ? 14 : 12,
-    color: Colors.textSecondary,
-    marginLeft: 6,
-    fontWeight: '500',
+    fontSize: isTablet ? 14 : 13,
+    color: modernColors.textSecondary,
+    fontWeight: '600',
   },
   budgetContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.backgroundSecondary,
-    paddingHorizontal: isTablet ? 12 : 8,
-    paddingVertical: isTablet ? 6 : 4,
-    borderRadius: isTablet ? 10 : 8,
+    paddingHorizontal: isTablet ? 14 : 12,
+    paddingVertical: isTablet ? 8 : 6,
+    borderRadius: isTablet ? 14 : 12,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    gap: 4,
   },
   budgetText: {
-    fontSize: isTablet ? 14 : 12,
-    color: Colors.success,
-    marginLeft: 4,
-    fontWeight: 'bold',
+    fontSize: isTablet ? 14 : 13,
+    color: modernColors.surface,
+    fontWeight: '800',
   },
   urgencyFooter: {
     alignItems: 'flex-end',
   },
   urgencyBadge: {
-    paddingHorizontal: isTablet ? 16 : 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: isTablet ? 16 : 14,
     paddingVertical: isTablet ? 8 : 6,
-    borderRadius: isTablet ? 14 : 12,
+    borderRadius: isTablet ? 16 : 14,
+    gap: 4,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   urgencyText: {
     fontSize: isTablet ? 12 : 11,
-    color: Colors.white,
-    fontWeight: 'bold',
+    color: modernColors.surface,
+    fontWeight: '700',
   },
 });

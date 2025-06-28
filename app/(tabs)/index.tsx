@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSign } from 'lucide-react-native';
+import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSign, Zap, Award, Target } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import JobCard from '@/components/JobCard';
@@ -12,28 +12,50 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Responsive breakpoints
+// Enhanced responsive breakpoints
 const isSmallDevice = screenWidth < 375;
 const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
 const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
 const isTablet = screenWidth >= 768;
 
-// Responsive dimensions
+// Modern color palette
+const modernColors = {
+  primary: '#6366F1', // Indigo
+  primaryLight: '#818CF8',
+  secondary: '#F59E0B', // Amber
+  secondaryLight: '#FCD34D',
+  accent: '#EF4444', // Red
+  accentLight: '#F87171',
+  success: '#10B981', // Emerald
+  warning: '#F59E0B',
+  info: '#3B82F6', // Blue
+  background: '#FAFBFC',
+  surface: '#FFFFFF',
+  surfaceElevated: '#F8FAFC',
+  text: '#1F2937',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB',
+  shadow: 'rgba(0, 0, 0, 0.1)',
+};
+
+// Enhanced responsive dimensions
 const getResponsiveDimensions = () => {
   const padding = isTablet ? 32 : isLargeDevice ? 24 : 20;
-  const cardPadding = isTablet ? 24 : 20;
+  const cardPadding = isTablet ? 28 : 24;
+  const borderRadius = isTablet ? 20 : 16;
   const fontSize = {
-    title: isTablet ? 32 : isLargeDevice ? 28 : isSmallDevice ? 24 : 26,
+    hero: isTablet ? 36 : isLargeDevice ? 32 : isSmallDevice ? 26 : 28,
+    title: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
     subtitle: isTablet ? 20 : isLargeDevice ? 18 : 16,
     body: isTablet ? 18 : 16,
     small: isTablet ? 16 : 14,
     tiny: isTablet ? 14 : 12,
   };
   
-  return { padding, cardPadding, fontSize };
+  return { padding, cardPadding, borderRadius, fontSize };
 };
 
-// Mock data
+// Mock data with enhanced structure
 const mockJobs: Job[] = [
   {
     id: '1',
@@ -75,6 +97,10 @@ const mockJobs: Job[] = [
   }
 ];
 
+// Animated components
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedView = Animated.View;
+
 export default function HomeScreen() {
   const router = useRouter();
   const { user, loading } = useAuthState();
@@ -82,6 +108,14 @@ export default function HomeScreen() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
   const insets = useSafeAreaInsets();
+
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const headerAnim = useRef(new Animated.Value(0)).current;
+  const statsAnim = useRef(new Animated.Value(0)).current;
+  const jobsAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -92,10 +126,48 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    // Mock loading nearby jobs
+    // Entrance animations
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.stagger(200, [
+        Animated.timing(headerAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(statsAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(jobsAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Mock loading nearby jobs with animation
     setTimeout(() => {
       setNearbyJobs(mockJobs);
-    }, 1000);
+    }, 1200);
     
     // Update time every minute
     const timer = setInterval(() => {
@@ -122,6 +194,46 @@ export default function HomeScreen() {
   const responsiveDimensions = getResponsiveDimensions();
   const styles = createStyles(responsiveDimensions, dimensions, insets);
 
+  // Enhanced animated button component
+  const AnimatedButton = ({ onPress, children, style, gradientColors }: any) => {
+    const buttonScale = useRef(new Animated.Value(1)).current;
+
+    const handlePressIn = () => {
+      Animated.spring(buttonScale, {
+        toValue: 0.96,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const handlePressOut = () => {
+      Animated.spring(buttonScale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <AnimatedTouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[
+          style,
+          {
+            transform: [{ scale: buttonScale }],
+          },
+        ]}
+      >
+        <LinearGradient
+          colors={gradientColors || [modernColors.primary, modernColors.primaryLight]}
+          style={styles.buttonGradient}
+        >
+          {children}
+        </LinearGradient>
+      </AnimatedTouchableOpacity>
+    );
+  };
+
   const renderWorkerHome = () => (
     <View style={styles.container}>
       <ScrollView 
@@ -129,117 +241,218 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryLight]}
-          style={styles.headerGradient}
+        {/* Enhanced Header with Gradient */}
+        <AnimatedView
+          style={[
+            styles.headerContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
         >
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Text style={styles.greeting}>
-                {getGreeting()}, {user?.name?.split(' ')[0]}!
-              </Text>
-              <View style={styles.locationRow}>
-                <MapPin size={isTablet ? 20 : 16} color={Colors.white} />
-                <Text style={styles.location}>Beirut, Lebanon</Text>
+          <LinearGradient
+            colors={[modernColors.primary, modernColors.primaryLight, modernColors.secondary]}
+            style={styles.headerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <Text style={styles.greeting}>
+                  {getGreeting()}, {user?.name?.split(' ')[0]}! ✨
+                </Text>
+                <View style={styles.locationRow}>
+                  <MapPin size={isTablet ? 20 : 16} color={modernColors.surface} />
+                  <Text style={styles.location}>Beirut, Lebanon</Text>
+                </View>
               </View>
+              <AnimatedTouchableOpacity style={styles.notificationIcon}>
+                <View style={styles.notificationIconBg}>
+                  <Bell size={isTablet ? 28 : 24} color={modernColors.primary} />
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.notificationCount}>3</Text>
+                  </View>
+                </View>
+              </AnimatedTouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.notificationIcon}>
-              <Bell size={isTablet ? 28 : 24} color={Colors.white} />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationCount}>3</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
+          </LinearGradient>
+        </AnimatedView>
 
-        {/* Stats Cards */}
-        <View style={styles.statsContainer}>
+        {/* Enhanced Stats Cards */}
+        <AnimatedView
+          style={[
+            styles.statsContainer,
+            {
+              opacity: statsAnim,
+              transform: [
+                { 
+                  translateY: statsAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                },
+                { scale: scaleAnim },
+              ],
+            },
+          ]}
+        >
           <View style={styles.statCard}>
             <LinearGradient
-              colors={[Colors.success, '#32CD32']}
+              colors={[modernColors.success, '#34D399']}
               style={styles.statGradient}
             >
-              <Briefcase size={isTablet ? 32 : 24} color={Colors.white} />
+              <View style={styles.statIconContainer}>
+                <Briefcase size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
               <Text style={styles.statValue}>12</Text>
               <Text style={styles.statLabel}>Completed</Text>
+              <View style={styles.statTrend}>
+                <TrendingUp size={12} color={modernColors.surface} />
+                <Text style={styles.statTrendText}>+2 this week</Text>
+              </View>
             </LinearGradient>
           </View>
           
           <View style={styles.statCard}>
             <LinearGradient
-              colors={[Colors.secondary, Colors.secondaryLight]}
+              colors={[modernColors.secondary, modernColors.secondaryLight]}
               style={styles.statGradient}
             >
-              <Star size={isTablet ? 32 : 24} color={Colors.white} />
+              <View style={styles.statIconContainer}>
+                <Star size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
               <Text style={styles.statValue}>4.8</Text>
               <Text style={styles.statLabel}>Rating</Text>
+              <View style={styles.statTrend}>
+                <Award size={12} color={modernColors.surface} />
+                <Text style={styles.statTrendText}>Top rated</Text>
+              </View>
             </LinearGradient>
           </View>
           
           <View style={styles.statCard}>
             <LinearGradient
-              colors={[Colors.info, '#20B2AA']}
+              colors={[modernColors.info, '#60A5FA']}
               style={styles.statGradient}
             >
-              <Clock size={isTablet ? 32 : 24} color={Colors.white} />
+              <View style={styles.statIconContainer}>
+                <Clock size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
               <Text style={styles.statValue}>3</Text>
               <Text style={styles.statLabel}>Active</Text>
+              <View style={styles.statTrend}>
+                <Zap size={12} color={modernColors.surface} />
+                <Text style={styles.statTrendText}>In progress</Text>
+              </View>
             </LinearGradient>
           </View>
-        </View>
+        </AnimatedView>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
+        {/* Enhanced Quick Actions */}
+        <AnimatedView
+          style={[
+            styles.quickActionsContainer,
+            {
+              opacity: headerAnim,
+              transform: [
+                { 
+                  translateY: headerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                },
+              ],
+            },
+          ]}
+        >
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity 
+            <AnimatedButton
               style={styles.quickActionCard}
               onPress={() => router.push('/jobs')}
+              gradientColors={[modernColors.primary, modernColors.primaryLight]}
             >
               <View style={styles.quickActionIcon}>
-                <TrendingUp size={isTablet ? 32 : 24} color={Colors.primary} />
+                <TrendingUp size={isTablet ? 32 : 24} color={modernColors.surface} />
               </View>
               <Text style={styles.quickActionText}>Browse Jobs</Text>
-            </TouchableOpacity>
+              <Text style={styles.quickActionSubtext}>Find new opportunities</Text>
+            </AnimatedButton>
             
-            <TouchableOpacity 
+            <AnimatedButton
               style={styles.quickActionCard}
               onPress={() => router.push('/profile')}
+              gradientColors={[modernColors.secondary, modernColors.secondaryLight]}
             >
               <View style={styles.quickActionIcon}>
-                <Users size={isTablet ? 32 : 24} color={Colors.primary} />
+                <Users size={isTablet ? 32 : 24} color={modernColors.surface} />
               </View>
               <Text style={styles.quickActionText}>Update Profile</Text>
-            </TouchableOpacity>
+              <Text style={styles.quickActionSubtext}>Enhance your visibility</Text>
+            </AnimatedButton>
           </View>
-        </View>
+        </AnimatedView>
 
-        {/* Nearby Jobs */}
-        <View style={styles.section}>
+        {/* Enhanced Nearby Jobs */}
+        <AnimatedView
+          style={[
+            styles.section,
+            {
+              opacity: jobsAnim,
+              transform: [
+                { 
+                  translateY: jobsAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nearby Jobs</Text>
+            <View>
+              <Text style={styles.sectionTitle}>Nearby Jobs</Text>
+              <Text style={styles.sectionSubtitle}>Perfect matches for your skills</Text>
+            </View>
             <TouchableOpacity onPress={() => router.push('/(tabs)/jobs') as any}>
               <Text style={styles.viewAll}>View All</Text>
             </TouchableOpacity>
           </View>
           
           {nearbyJobs.length > 0 ? (
-            nearbyJobs.map((job) => (
-              <JobCard
+            nearbyJobs.map((job, index) => (
+              <AnimatedView
                 key={job.id}
-                job={job}
-                onPress={() => handleJobPress(job.id)}
-                showDistance={true}
-                distance={Math.random() * 10 + 1}
-              />
+                style={{
+                  opacity: jobsAnim,
+                  transform: [
+                    { 
+                      translateY: jobsAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20 * (index + 1), 0],
+                      })
+                    },
+                  ],
+                }}
+              >
+                <JobCard
+                  job={job}
+                  onPress={() => handleJobPress(job.id)}
+                  showDistance={true}
+                  distance={Math.random() * 10 + 1}
+                />
+              </AnimatedView>
             ))
           ) : (
             <View style={styles.loadingJobs}>
-              <Text style={styles.loadingText}>Finding jobs near you...</Text>
+              <View style={styles.loadingIndicator}>
+                <Text style={styles.loadingText}>Finding jobs near you...</Text>
+              </View>
             </View>
           )}
-        </View>
+        </AnimatedView>
       </ScrollView>
     </View>
   );
@@ -251,99 +464,205 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryLight]}
-          style={styles.headerGradient}
+        {/* Enhanced Header with Gradient */}
+        <AnimatedView
+          style={[
+            styles.headerContainer,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
         >
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Text style={styles.greeting}>
-                Welcome back, {user?.name?.split(' ')[0]}!
-              </Text>
-              <Text style={styles.subGreeting}>Find the right worker for your needs</Text>
-            </View>
-            <TouchableOpacity style={styles.notificationIcon}>
-              <Bell size={isTablet ? 28 : 24} color={Colors.white} />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationCount}>2</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </LinearGradient>
-
-        {/* Post Job CTA */}
-        <View style={styles.ctaContainer}>
           <LinearGradient
-            colors={[Colors.accent, Colors.accentLight]}
-            style={styles.ctaGradient}
+            colors={[modernColors.primary, modernColors.primaryLight, modernColors.secondary]}
+            style={styles.headerGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
           >
-            <TouchableOpacity 
+            <View style={styles.header}>
+              <View style={styles.headerContent}>
+                <Text style={styles.greeting}>
+                  Welcome back, {user?.name?.split(' ')[0]}! 👋
+                </Text>
+                <Text style={styles.subGreeting}>Find the right worker for your needs</Text>
+              </View>
+              <AnimatedTouchableOpacity style={styles.notificationIcon}>
+                <View style={styles.notificationIconBg}>
+                  <Bell size={isTablet ? 28 : 24} color={modernColors.primary} />
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.notificationCount}>2</Text>
+                  </View>
+                </View>
+              </AnimatedTouchableOpacity>
+            </View>
+          </LinearGradient>
+        </AnimatedView>
+
+        {/* Enhanced Post Job CTA */}
+        <AnimatedView
+          style={[
+            styles.ctaContainer,
+            {
+              opacity: headerAnim,
+              transform: [
+                { 
+                  translateY: headerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                },
+                { scale: scaleAnim },
+              ],
+            },
+          ]}
+        >
+          <LinearGradient
+            colors={[modernColors.accent, modernColors.accentLight, '#F97316']}
+            style={styles.ctaGradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <AnimatedButton 
               style={styles.postJobButton}
               onPress={() => router.push('/(tabs)/jobs/post')}
+              gradientColors={['transparent', 'transparent']}
             >
-              <Plus size={isTablet ? 32 : 28} color={Colors.white} />
+              <View style={styles.ctaIconContainer}>
+                <Plus size={isTablet ? 32 : 28} color={modernColors.surface} />
+              </View>
               <View style={styles.ctaContent}>
                 <Text style={styles.ctaTitle}>Post a New Job</Text>
                 <Text style={styles.ctaSubtitle}>Get connected with skilled workers</Text>
               </View>
-            </TouchableOpacity>
+              <Target size={isTablet ? 24 : 20} color={modernColors.surface} />
+            </AnimatedButton>
           </LinearGradient>
-        </View>
+        </AnimatedView>
 
-        {/* Client Stats */}
-        <View style={styles.statsContainer}>
+        {/* Enhanced Client Stats */}
+        <AnimatedView
+          style={[
+            styles.statsContainer,
+            {
+              opacity: statsAnim,
+              transform: [
+                { 
+                  translateY: statsAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                },
+                { scale: scaleAnim },
+              ],
+            },
+          ]}
+        >
           <View style={styles.statCard}>
             <LinearGradient
-              colors={[Colors.primary, Colors.primaryLight]}
+              colors={[modernColors.primary, modernColors.primaryLight]}
               style={styles.statGradient}
             >
-              <Briefcase size={isTablet ? 32 : 24} color={Colors.white} />
+              <View style={styles.statIconContainer}>
+                <Briefcase size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
               <Text style={styles.statValue}>5</Text>
               <Text style={styles.statLabel}>Jobs Posted</Text>
+              <View style={styles.statTrend}>
+                <TrendingUp size={12} color={modernColors.surface} />
+                <Text style={styles.statTrendText}>+1 this month</Text>
+              </View>
             </LinearGradient>
           </View>
           
           <View style={styles.statCard}>
             <LinearGradient
-              colors={[Colors.secondary, Colors.secondaryLight]}
+              colors={[modernColors.secondary, modernColors.secondaryLight]}
               style={styles.statGradient}
             >
-              <Star size={isTablet ? 32 : 24} color={Colors.white} />
+              <View style={styles.statIconContainer}>
+                <Star size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
               <Text style={styles.statValue}>4.6</Text>
               <Text style={styles.statLabel}>Rating</Text>
+              <View style={styles.statTrend}>
+                <Award size={12} color={modernColors.surface} />
+                <Text style={styles.statTrendText}>Excellent</Text>
+              </View>
             </LinearGradient>
           </View>
           
           <View style={styles.statCard}>
             <LinearGradient
-              colors={[Colors.success, '#32CD32']}
+              colors={[modernColors.success, '#34D399']}
               style={styles.statGradient}
             >
-              <DollarSign size={isTablet ? 32 : 24} color={Colors.white} />
+              <View style={styles.statIconContainer}>
+                <DollarSign size={isTablet ? 32 : 24} color={modernColors.surface} />
+              </View>
               <Text style={styles.statValue}>$2.4k</Text>
               <Text style={styles.statLabel}>Spent</Text>
+              <View style={styles.statTrend}>
+                <TrendingUp size={12} color={modernColors.surface} />
+                <Text style={styles.statTrendText}>This year</Text>
+              </View>
             </LinearGradient>
           </View>
-        </View>
+        </AnimatedView>
 
-        {/* Recent Jobs */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Recent Jobs</Text>
+        {/* Enhanced Recent Jobs */}
+        <AnimatedView
+          style={[
+            styles.section,
+            {
+              opacity: jobsAnim,
+              transform: [
+                { 
+                  translateY: jobsAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                },
+              ],
+            },
+          ]}
+        >
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={styles.sectionTitle}>Your Recent Jobs</Text>
+              <Text style={styles.sectionSubtitle}>Track your posted opportunities</Text>
+            </View>
+          </View>
           {nearbyJobs.length > 0 ? (
-            nearbyJobs.map((job) => (
-              <JobCard
+            nearbyJobs.map((job, index) => (
+              <AnimatedView
                 key={job.id}
-                job={job}
-                onPress={() => handleJobPress(job.id)}
-              />
+                style={{
+                  opacity: jobsAnim,
+                  transform: [
+                    { 
+                      translateY: jobsAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [20 * (index + 1), 0],
+                      })
+                    },
+                  ],
+                }}
+              >
+                <JobCard
+                  job={job}
+                  onPress={() => handleJobPress(job.id)}
+                />
+              </AnimatedView>
             ))
           ) : (
             <View style={styles.loadingJobs}>
-              <Text style={styles.loadingText}>Loading your jobs...</Text>
+              <View style={styles.loadingIndicator}>
+                <Text style={styles.loadingText}>Loading your jobs...</Text>
+              </View>
             </View>
           )}
-        </View>
+        </AnimatedView>
       </ScrollView>
     </View>
   );
@@ -352,14 +671,23 @@ export default function HomeScreen() {
     return (
       <View style={styles.loadingContainer}>
         <LinearGradient
-          colors={[Colors.primary, Colors.primaryLight]}
+          colors={[modernColors.primary, modernColors.primaryLight, modernColors.secondary]}
           style={styles.loadingGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
         >
-          <Text style={styles.loadingTitle}>WorkConnect</Text>
-          <Text style={styles.loadingSubtitle}>Lebanon</Text>
-          <View style={styles.loadingIndicator}>
-            <Text style={styles.loadingText}>Loading...</Text>
-          </View>
+          <AnimatedView
+            style={{
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            }}
+          >
+            <Text style={styles.loadingTitle}>WorkConnect</Text>
+            <Text style={styles.loadingSubtitle}>Lebanon</Text>
+            <View style={styles.loadingIndicator}>
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          </AnimatedView>
         </LinearGradient>
       </View>
     );
@@ -371,7 +699,7 @@ export default function HomeScreen() {
 const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: modernColors.background,
   },
   scrollView: {
     flex: 1,
@@ -391,33 +719,45 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     paddingBottom: insets.bottom,
   },
   loadingTitle: {
-    fontSize: responsiveDimensions.fontSize.title + 8,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontSize: responsiveDimensions.fontSize.hero,
+    fontWeight: '800',
+    color: modernColors.surface,
     marginBottom: 8,
+    textAlign: 'center',
   },
   loadingSubtitle: {
     fontSize: responsiveDimensions.fontSize.subtitle,
-    color: Colors.white,
+    color: modernColors.surface,
     opacity: 0.9,
     marginBottom: 40,
+    textAlign: 'center',
   },
   loadingIndicator: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: isTablet ? 32 : 24,
     paddingVertical: isTablet ? 16 : 12,
     borderRadius: 25,
+    backdropFilter: 'blur(10px)',
   },
   loadingText: {
-    color: Colors.white,
+    color: modernColors.surface,
     fontSize: responsiveDimensions.fontSize.body,
     fontWeight: '500',
   },
+  headerContainer: {
+    marginBottom: isTablet ? -25 : -20,
+    zIndex: 1,
+  },
   headerGradient: {
     paddingTop: insets.top + (isTablet ? 20 : 16),
-    paddingBottom: isTablet ? 40 : 30,
+    paddingBottom: isTablet ? 50 : 40,
     borderBottomLeftRadius: isTablet ? 35 : 25,
     borderBottomRightRadius: isTablet ? 35 : 25,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   header: {
     flexDirection: 'row',
@@ -430,148 +770,200 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     flex: 1,
   },
   greeting: {
-    fontSize: responsiveDimensions.fontSize.title,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontSize: responsiveDimensions.fontSize.hero,
+    fontWeight: '800',
+    color: modernColors.surface,
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
   subGreeting: {
     fontSize: responsiveDimensions.fontSize.body,
-    color: Colors.white,
+    color: modernColors.surface,
     opacity: 0.9,
+    fontWeight: '500',
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
   },
   location: {
     fontSize: responsiveDimensions.fontSize.small,
-    color: Colors.white,
+    color: modernColors.surface,
     marginLeft: 6,
-    opacity: 0.9,
+    fontWeight: '600',
   },
   notificationIcon: {
     position: 'relative',
-    padding: isTablet ? 12 : 8,
+  },
+  notificationIconBg: {
+    backgroundColor: modernColors.surface,
+    borderRadius: isTablet ? 20 : 16,
+    padding: isTablet ? 12 : 10,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   notificationBadge: {
     position: 'absolute',
-    top: isTablet ? 8 : 4,
-    right: isTablet ? 8 : 4,
-    backgroundColor: Colors.accent,
+    top: -4,
+    right: -4,
+    backgroundColor: modernColors.accent,
     borderRadius: isTablet ? 12 : 10,
     width: isTablet ? 24 : 20,
     height: isTablet ? 24 : 20,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: modernColors.surface,
   },
   notificationCount: {
     fontSize: responsiveDimensions.fontSize.tiny,
-    color: Colors.white,
+    color: modernColors.surface,
     fontWeight: 'bold',
   },
   statsContainer: {
-    flexDirection: isTablet ? 'row' : 'row',
+    flexDirection: 'row',
     paddingHorizontal: responsiveDimensions.padding,
-    marginTop: isTablet ? -20 : -15,
+    marginTop: isTablet ? 20 : 15,
     marginBottom: isTablet ? 32 : 24,
     gap: isTablet ? 16 : 12,
   },
   statCard: {
     flex: 1,
-    borderRadius: isTablet ? 20 : 16,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
+    borderRadius: responsiveDimensions.borderRadius,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 16,
+    elevation: 8,
   },
   statGradient: {
     padding: responsiveDimensions.cardPadding,
-    borderRadius: isTablet ? 20 : 16,
+    borderRadius: responsiveDimensions.borderRadius,
     alignItems: 'center',
   },
+  statIconContainer: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: isTablet ? 16 : 12,
+    padding: isTablet ? 12 : 8,
+    marginBottom: isTablet ? 12 : 8,
+  },
   statValue: {
-    fontSize: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
-    fontWeight: 'bold',
-    color: Colors.white,
-    marginTop: isTablet ? 12 : 8,
+    fontSize: isTablet ? 32 : isLargeDevice ? 28 : isSmallDevice ? 22 : 24,
+    fontWeight: '800',
+    color: modernColors.surface,
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   statLabel: {
     fontSize: responsiveDimensions.fontSize.tiny,
-    color: Colors.white,
+    color: modernColors.surface,
     textAlign: 'center',
     opacity: 0.9,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  statTrend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  statTrendText: {
+    fontSize: 10,
+    color: modernColors.surface,
+    fontWeight: '600',
   },
   quickActionsContainer: {
     paddingHorizontal: responsiveDimensions.padding,
     marginBottom: isTablet ? 32 : 24,
   },
   quickActions: {
-    flexDirection: isTablet ? 'row' : 'row',
+    flexDirection: 'row',
     gap: isTablet ? 16 : 12,
   },
   quickActionCard: {
     flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: isTablet ? 16 : 12,
-    padding: isTablet ? 24 : 16,
+    borderRadius: responsiveDimensions.borderRadius,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  buttonGradient: {
+    padding: isTablet ? 24 : 20,
+    borderRadius: responsiveDimensions.borderRadius,
     alignItems: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   quickActionIcon: {
-    width: isTablet ? 64 : 48,
-    height: isTablet ? 64 : 48,
-    borderRadius: isTablet ? 32 : 24,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: isTablet ? 20 : 16,
+    padding: isTablet ? 16 : 12,
     marginBottom: isTablet ? 12 : 8,
   },
   quickActionText: {
     fontSize: responsiveDimensions.fontSize.small,
-    fontWeight: '500',
-    color: Colors.text,
+    fontWeight: '700',
+    color: modernColors.surface,
     textAlign: 'center',
+    marginBottom: 4,
+  },
+  quickActionSubtext: {
+    fontSize: responsiveDimensions.fontSize.tiny,
+    color: modernColors.surface,
+    opacity: 0.8,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   ctaContainer: {
     paddingHorizontal: responsiveDimensions.padding,
-    marginTop: isTablet ? -20 : -15,
+    marginTop: isTablet ? 20 : 15,
     marginBottom: isTablet ? 32 : 24,
   },
   ctaGradient: {
-    borderRadius: isTablet ? 20 : 16,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    borderRadius: responsiveDimensions.borderRadius,
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
   },
   postJobButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: responsiveDimensions.cardPadding,
+    borderRadius: responsiveDimensions.borderRadius,
+  },
+  ctaIconContainer: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: isTablet ? 20 : 16,
+    padding: isTablet ? 16 : 12,
+    marginRight: isTablet ? 20 : 16,
   },
   ctaContent: {
-    marginLeft: isTablet ? 20 : 16,
     flex: 1,
   },
   ctaTitle: {
     fontSize: responsiveDimensions.fontSize.subtitle,
-    fontWeight: 'bold',
-    color: Colors.white,
+    fontWeight: '800',
+    color: modernColors.surface,
     marginBottom: 4,
+    letterSpacing: -0.3,
   },
   ctaSubtitle: {
     fontSize: responsiveDimensions.fontSize.small,
-    color: Colors.white,
+    color: modernColors.surface,
     opacity: 0.9,
+    fontWeight: '500',
   },
   section: {
     paddingHorizontal: responsiveDimensions.padding,
@@ -580,28 +972,40 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: isTablet ? 20 : 16,
   },
   sectionTitle: {
     fontSize: responsiveDimensions.fontSize.subtitle,
-    fontWeight: 'bold',
-    color: Colors.text,
+    fontWeight: '800',
+    color: modernColors.text,
+    letterSpacing: -0.3,
+  },
+  sectionSubtitle: {
+    fontSize: responsiveDimensions.fontSize.small,
+    color: modernColors.textSecondary,
+    marginTop: 4,
+    fontWeight: '500',
   },
   viewAll: {
     fontSize: responsiveDimensions.fontSize.small,
-    color: Colors.primary,
-    fontWeight: '600',
+    color: modernColors.primary,
+    fontWeight: '700',
+    backgroundColor: modernColors.surfaceElevated,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   loadingJobs: {
-    backgroundColor: Colors.white,
-    borderRadius: isTablet ? 16 : 12,
+    backgroundColor: modernColors.surface,
+    borderRadius: responsiveDimensions.borderRadius,
     padding: isTablet ? 32 : 24,
     alignItems: 'center',
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: modernColors.shadow,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
   },
 });

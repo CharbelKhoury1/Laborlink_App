@@ -248,15 +248,6 @@ export default function HomeScreen() {
           </LinearGradient>
         </View>
 
-<<<<<<< HEAD
-        <TouchableOpacity 
-          style={styles.postJobButton}
-          onPress={() => router.push('/(tabs)/jobs/post') as any}
-        >
-          <Plus size={24} color={Colors.white} />
-          <Text style={styles.postJobText}>Post a New Job</Text>
-        </TouchableOpacity>
-=======
         {/* Client Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
@@ -292,7 +283,6 @@ export default function HomeScreen() {
             </LinearGradient>
           </View>
         </View>
->>>>>>> d4a306fad07c29b0201a3d6362438f29a515618a
 
         {/* Recent Jobs */}
         <View style={styles.section}>

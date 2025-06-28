@@ -104,7 +104,7 @@ const AnimatedView = Animated.View;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, loading } = useAuthState();
+  const { user, loading, initialized } = useAuthState();
   const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
@@ -127,50 +127,52 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    console.log('HomeScreen - User:', user, 'Loading:', loading); // Debug log
+    console.log('HomeScreen - User:', user, 'Loading:', loading, 'Initialized:', initialized); // Debug log
     
-    // Entrance animations
-    Animated.sequence([
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]),
-      Animated.stagger(200, [
-        Animated.timing(headerAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(statsAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(jobsAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
+    if (initialized && user) {
+      // Entrance animations
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.stagger(200, [
+          Animated.timing(headerAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(statsAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(jobsAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
 
-    // Mock loading nearby jobs with animation
-    setTimeout(() => {
-      setNearbyJobs(mockJobs);
-    }, 1200);
+      // Mock loading nearby jobs with animation
+      setTimeout(() => {
+        setNearbyJobs(mockJobs);
+      }, 1200);
+    }
     
     // Update time every minute
     const timer = setInterval(() => {
@@ -178,7 +180,7 @@ export default function HomeScreen() {
     }, 60000);
     
     return () => clearInterval(timer);
-  }, []);
+  }, [initialized, user]);
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -799,7 +801,6 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     paddingHorizontal: isTablet ? 32 : 24,
     paddingVertical: isTablet ? 16 : 12,
     borderRadius: 25,
-    backdropFilter: 'blur(10px)',
   },
   loadingText: {
     color: modernColors.surface,

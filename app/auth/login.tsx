@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function Login() {
   const router = useRouter();
   const { login, loading } = useAuthState();
+  const insets = useSafeAreaInsets();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,7 +49,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <LinearGradient
         colors={[Colors.primary, Colors.primaryLight]}
         style={styles.headerGradient}
@@ -151,13 +155,15 @@ export default function Login() {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
+    width: screenWidth,
+    height: screenHeight,
     backgroundColor: Colors.background,
   },
   headerGradient: {

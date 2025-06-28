@@ -12,7 +12,7 @@ export default function TabLayout() {
   const insets = useSafeAreaInsets();
   
   return (
-    <View style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <Tabs
         screenOptions={{
           headerShown: false,
@@ -26,6 +26,10 @@ export default function TabLayout() {
             paddingBottom: Math.max(insets.bottom, isTablet ? 12 : 8),
             height: Math.max(60 + insets.bottom, isTablet ? 80 : 60),
             paddingHorizontal: isTablet ? 20 : 0,
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
           },
           tabBarLabelStyle: {
             fontSize: isTablet ? 14 : 12,
@@ -79,8 +83,10 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
+    width: screenWidth,
+    height: screenHeight,
     backgroundColor: Colors.background,
   },
 });

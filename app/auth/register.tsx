@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function Register() {
   const router = useRouter();
   const { userType } = useLocalSearchParams<{ userType: 'worker' | 'client' }>();
   const { register, loading } = useAuthState();
+  const insets = useSafeAreaInsets();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -50,7 +54,7 @@ export default function Register() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <ArrowLeft size={24} color={Colors.text} />
@@ -59,7 +63,7 @@ export default function Register() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
           <Text style={styles.logo}>WorkConnect</Text>
           <Text style={styles.logoSubtitle}>Lebanon</Text>
@@ -171,13 +175,15 @@ export default function Register() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
+    width: screenWidth,
+    height: screenHeight,
     backgroundColor: Colors.background,
   },
   header: {
@@ -196,8 +202,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
+    paddingBottom: 40,
   },
   logoContainer: {
     alignItems: 'center',
@@ -226,7 +236,6 @@ const styles = StyleSheet.create({
   },
   form: {
     gap: 20,
-    paddingBottom: 40,
   },
   inputContainer: {
     gap: 8,

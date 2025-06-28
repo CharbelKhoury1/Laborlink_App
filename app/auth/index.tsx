@@ -53,7 +53,7 @@ export default function AuthIndex() {
   const styles = createStyles(responsiveDimensions, dimensions, insets);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <LinearGradient
         colors={[Colors.primary, Colors.primaryLight]}
         style={styles.gradient}
@@ -134,12 +134,16 @@ export default function AuthIndex() {
 }
 
 const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) => StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
+    width: dimensions.width,
+    height: dimensions.height,
     backgroundColor: Colors.primary,
   },
   gradient: {
     flex: 1,
+    width: dimensions.width,
+    height: dimensions.height,
   },
   scrollContent: {
     flexGrow: 1,

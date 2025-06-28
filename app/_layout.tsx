@@ -8,10 +8,12 @@ import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useAuthState } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Dimensions } from 'react-native';
 import Colors from '@/constants/Colors';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -46,13 +48,13 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (initialized && !loading) {
-      console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized); // Debug log
+      console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
       
       if (user) {
-        console.log('✅ Navigating to tabs with user:', user.userType); // Debug log
+        console.log('✅ Navigating to tabs with user:', user.userType);
         router.replace('/(tabs)');
       } else {
-        console.log('ℹ️ Navigating to auth - no user found'); // Debug log
+        console.log('ℹ️ Navigating to auth - no user found');
         router.replace('/auth');
       }
     }
@@ -61,7 +63,7 @@ export default function RootLayout() {
   // Show loading spinner while fonts are loading
   if (!fontsLoaded && !fontError) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.fullScreenContainer}>
         <LoadingSpinner size="large" />
       </View>
     );
@@ -70,7 +72,7 @@ export default function RootLayout() {
   // Show loading spinner while auth is initializing
   if (!initialized || loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.fullScreenContainer}>
         <LoadingSpinner size="large" />
       </View>
     );
@@ -78,7 +80,7 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <View style={styles.container}>
+      <View style={styles.fullScreenContainer}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="auth" />
           <Stack.Screen name="(tabs)" />
@@ -92,12 +94,10 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
+    width: screenWidth,
+    height: screenHeight,
     backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',

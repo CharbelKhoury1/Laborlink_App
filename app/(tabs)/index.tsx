@@ -21,15 +21,15 @@ const isTablet = screenWidth >= 768;
 
 // Modern color palette
 const modernColors = {
-  primary: '#6366F1', // Indigo
+  primary: '#6366F1',
   primaryLight: '#818CF8',
-  secondary: '#F59E0B', // Amber
+  secondary: '#F59E0B',
   secondaryLight: '#FCD34D',
-  accent: '#EF4444', // Red
+  accent: '#EF4444',
   accentLight: '#F87171',
-  success: '#10B981', // Emerald
+  success: '#10B981',
   warning: '#F59E0B',
-  info: '#3B82F6', // Blue
+  info: '#3B82F6',
   background: '#FAFBFC',
   surface: '#FFFFFF',
   surfaceElevated: '#F8FAFC',
@@ -127,7 +127,7 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
-    console.log('HomeScreen - User:', user, 'Loading:', loading, 'Initialized:', initialized); // Debug log
+    console.log('HomeScreen - User:', user, 'Loading:', loading, 'Initialized:', initialized);
     
     if (initialized && user) {
       // Entrance animations
@@ -240,7 +240,7 @@ export default function HomeScreen() {
   };
 
   const renderWorkerHome = () => (
-    <View style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
@@ -486,7 +486,7 @@ export default function HomeScreen() {
   );
 
   const renderClientHome = () => (
-    <View style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
@@ -709,7 +709,7 @@ export default function HomeScreen() {
   // Show loading state while authentication is being determined
   if (loading || !initialized) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.fullScreenContainer}>
         <LinearGradient
           colors={[modernColors.primary, modernColors.primaryLight, modernColors.secondary]}
           style={styles.loadingGradient}
@@ -736,7 +736,7 @@ export default function HomeScreen() {
   // Show error state if user is not found
   if (!user) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles.fullScreenContainer}>
         <LinearGradient
           colors={[modernColors.accent, modernColors.accentLight]}
           style={styles.loadingGradient}
@@ -756,13 +756,15 @@ export default function HomeScreen() {
     );
   }
 
-  console.log('Rendering home for user type:', user.userType); // Debug log
+  console.log('Rendering home for user type:', user.userType);
   return user.userType === 'worker' ? renderWorkerHome() : renderClientHome();
 }
 
 const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) => StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
+    width: dimensions.width,
+    height: dimensions.height,
     backgroundColor: modernColors.background,
   },
   scrollView: {
@@ -770,13 +772,12 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: Math.max(insets.bottom, 20),
-  },
-  loadingContainer: {
-    flex: 1,
+    paddingBottom: Math.max(insets.bottom + 80, 100), // Account for tab bar
   },
   loadingGradient: {
     flex: 1,
+    width: dimensions.width,
+    height: dimensions.height,
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: insets.top,

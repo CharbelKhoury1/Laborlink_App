@@ -1,15 +1,19 @@
 import React from 'react';
-import { View, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import { TypewriterDemo } from '@/components/ui/TypewriterDemo';
 import Colors from '@/constants/Colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function TypewriterDemoScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.fullScreenContainer}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowLeft size={24} color={Colors.text} />
@@ -18,16 +22,18 @@ export default function TypewriterDemoScreen() {
         <View style={{ width: 24 }} />
       </View>
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         <TypewriterDemo />
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullScreenContainer: {
     flex: 1,
+    width: screenWidth,
+    height: screenHeight,
     backgroundColor: Colors.background,
   },
   header: {

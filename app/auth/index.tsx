@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Users, Briefcase } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import LanguageSelector from '@/components/LanguageSelector';
 import i18n from '@/utils/i18n';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -34,6 +35,7 @@ export default function AuthIndex() {
   const router = useRouter();
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -48,10 +50,10 @@ export default function AuthIndex() {
   };
 
   const responsiveDimensions = getResponsiveDimensions();
-  const styles = createStyles(responsiveDimensions, dimensions);
+  const styles = createStyles(responsiveDimensions, dimensions, insets);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <LinearGradient
         colors={[Colors.primary, Colors.primaryLight]}
         style={styles.gradient}
@@ -59,6 +61,7 @@ export default function AuthIndex() {
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           <View style={styles.header}>
             <LanguageSelector
@@ -126,13 +129,14 @@ export default function AuthIndex() {
           </View>
         </ScrollView>
       </LinearGradient>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.create({
+const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.primary,
   },
   gradient: {
     flex: 1,
@@ -140,6 +144,8 @@ const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.
   scrollContent: {
     flexGrow: 1,
     minHeight: dimensions.height,
+    paddingTop: insets.top,
+    paddingBottom: Math.max(insets.bottom, 20),
   },
   header: {
     alignItems: 'flex-end',

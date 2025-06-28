@@ -8,6 +8,8 @@ import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useAuthState } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
+import { View, StyleSheet } from 'react-native';
+import Colors from '@/constants/Colors';
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -43,13 +45,20 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <View style={styles.container}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="auth" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+});

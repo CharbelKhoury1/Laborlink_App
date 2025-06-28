@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSign } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,6 +8,7 @@ import JobCard from '@/components/JobCard';
 import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -80,6 +81,7 @@ export default function HomeScreen() {
   const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -118,11 +120,15 @@ export default function HomeScreen() {
   };
 
   const responsiveDimensions = getResponsiveDimensions();
-  const styles = createStyles(responsiveDimensions, dimensions);
+  const styles = createStyles(responsiveDimensions, dimensions, insets);
 
   const renderWorkerHome = () => (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <SafeAreaView>
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header with Gradient */}
         <LinearGradient
           colors={[Colors.primary, Colors.primaryLight]}
@@ -234,13 +240,17 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-      </SafeAreaView>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 
   const renderClientHome = () => (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <SafeAreaView>
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header with Gradient */}
         <LinearGradient
           colors={[Colors.primary, Colors.primaryLight]}
@@ -334,8 +344,8 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-      </SafeAreaView>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 
   if (loading || !user) {
@@ -358,10 +368,17 @@ export default function HomeScreen() {
   return user.userType === 'worker' ? renderWorkerHome() : renderClientHome();
 }
 
-const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.create({
+const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: Math.max(insets.bottom, 20),
   },
   loadingContainer: {
     flex: 1,
@@ -370,6 +387,8 @@ const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: insets.top,
+    paddingBottom: insets.bottom,
   },
   loadingTitle: {
     fontSize: responsiveDimensions.fontSize.title + 8,
@@ -395,6 +414,7 @@ const createStyles = (responsiveDimensions: any, dimensions: any) => StyleSheet.
     fontWeight: '500',
   },
   headerGradient: {
+    paddingTop: insets.top + (isTablet ? 20 : 16),
     paddingBottom: isTablet ? 40 : 30,
     borderBottomLeftRadius: isTablet ? 35 : 25,
     borderBottomRightRadius: isTablet ? 35 : 25,

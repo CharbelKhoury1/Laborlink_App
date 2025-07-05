@@ -1,287 +1,399 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Users, Briefcase } from 'lucide-react-native';
+import { Users, Briefcase, ArrowRight, Star, Shield, Clock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import LanguageSelector from '@/components/LanguageSelector';
-import i18n from '@/utils/i18n';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { FadeInDown, FadeInUp, SlideInRight } from 'react-native-reanimated';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-// Responsive breakpoints
-const isSmallDevice = screenWidth < 375;
-const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
-const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
-const isTablet = screenWidth >= 768;
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
-// Responsive dimensions
-const getResponsiveDimensions = () => {
-  const padding = isTablet ? 40 : isLargeDevice ? 24 : 20;
-  const cardPadding = isTablet ? 32 : 24;
-  const fontSize = {
-    logo: isTablet ? 48 : isLargeDevice ? 36 : isSmallDevice ? 28 : 32,
-    subtitle: isTablet ? 24 : isLargeDevice ? 18 : 16,
-    body: isTablet ? 20 : isLargeDevice ? 16 : 14,
-    title: isTablet ? 28 : isLargeDevice ? 20 : 18,
-    small: isTablet ? 16 : 14,
-  };
-  
-  return { padding, cardPadding, fontSize };
-};
-
-export default function AuthIndex() {
+export default function AuthLanding() {
   const router = useRouter();
-  const [language, setLanguage] = useState<'en' | 'ar'>('en');
-  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
-  const [isReady, setIsReady] = useState(false);
   const insets = useSafeAreaInsets();
+  const [currentFeature, setCurrentFeature] = useState(0);
+
+  const features = [
+    {
+      icon: Users,
+      title: 'Connect with Skilled Workers',
+      description: 'Find verified professionals for any job in Lebanon',
+    },
+    {
+      icon: Shield,
+      title: 'Secure & Trusted',
+      description: 'All workers are verified with secure payment protection',
+    },
+    {
+      icon: Clock,
+      title: 'Quick & Reliable',
+      description: 'Get your jobs done fast with real-time tracking',
+    },
+  ];
 
   useEffect(() => {
-    console.log('🔄 Auth index screen mounted');
-    
-    // Small delay to ensure screen is ready
-    const readyTimeout = setTimeout(() => {
-      setIsReady(true);
-      console.log('✅ Auth index screen ready');
-    }, 100);
-
-    const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setDimensions(window);
-    });
-
-    return () => {
-      clearTimeout(readyTimeout);
-      subscription?.remove();
-    };
+    const interval = setInterval(() => {
+      setCurrentFeature((prev) => (prev + 1) % features.length);
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
-  const handleUserTypeSelect = (userType: 'worker' | 'client') => {
-    console.log('🔄 Navigating to register with userType:', userType);
-    router.push(`/auth/register?userType=${userType}`);
-  };
-
-  const responsiveDimensions = getResponsiveDimensions();
-  const styles = createStyles(responsiveDimensions, dimensions, insets);
-
-  // Show loading state while screen is preparing
-  if (!isReady) {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <LinearGradient
-          colors={[Colors.primary, Colors.primaryLight]}
-          style={styles.gradient}
-        >
-          <View style={styles.loadingContainer}>
-            <Text style={styles.logo}>WorkConnect</Text>
-            <Text style={styles.logoSubtitle}>Lebanon</Text>
-            <Text style={styles.loadingText}>Loading...</Text>
-          </View>
-        </LinearGradient>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.fullScreenContainer}>
+    <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.primary, Colors.primaryLight]}
+        colors={[Colors.primary, Colors.primaryLight, Colors.secondary]}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <ScrollView 
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20 }]}
           showsVerticalScrollIndicator={false}
           bounces={false}
         >
-          <View style={styles.header}>
-            <LanguageSelector
-              currentLanguage={language}
-              onLanguageChange={setLanguage}
-            />
-          </View>
-
-          <View style={styles.content}>
+          {/* Hero Section */}
+          <Animated.View 
+            entering={FadeInUp.delay(200).duration(800)}
+            style={styles.heroSection}
+          >
             <View style={styles.logoContainer}>
               <Text style={styles.logo}>WorkConnect</Text>
               <Text style={styles.logoSubtitle}>Lebanon</Text>
             </View>
 
-            <Text style={styles.tagline}>
-              {language === 'en' 
-                ? 'Connecting Lebanese workers with local opportunities'
-                : 'ربط العمال اللبنانيين بالفرص المحلية'
-              }
+            <Text style={styles.heroTitle}>
+              Connecting Lebanese Workers with Local Opportunities
             </Text>
 
-            <View style={styles.userTypeContainer}>
-              <Text style={styles.selectTitle}>
-                {i18n.t('selectUserType')}
-              </Text>
+            <Text style={styles.heroDescription}>
+              Join thousands of workers and clients building Lebanon's future together
+            </Text>
+          </Animated.View>
 
-              <TouchableOpacity
-                style={styles.userTypeCard}
-                onPress={() => handleUserTypeSelect('worker')}
+          {/* Feature Showcase */}
+          <Animated.View 
+            entering={FadeInDown.delay(400).duration(800)}
+            style={styles.featureShowcase}
+          >
+            <View style={styles.featureCard}>
+              <LinearGradient
+                colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.1)']}
+                style={styles.featureCardGradient}
               >
-                <Users size={isTablet ? 64 : isLargeDevice ? 48 : 40} color={Colors.primary} />
-                <Text style={styles.userTypeTitle}>
-                  {i18n.t('worker')}
+                {React.createElement(features[currentFeature].icon, {
+                  size: 48,
+                  color: Colors.white,
+                })}
+                <Text style={styles.featureTitle}>
+                  {features[currentFeature].title}
                 </Text>
-                <Text style={styles.userTypeDescription}>
-                  {i18n.t('workerDescription')}
+                <Text style={styles.featureDescription}>
+                  {features[currentFeature].description}
                 </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.userTypeCard}
-                onPress={() => handleUserTypeSelect('client')}
-              >
-                <Briefcase size={isTablet ? 64 : isLargeDevice ? 48 : 40} color={Colors.primary} />
-                <Text style={styles.userTypeTitle}>
-                  {i18n.t('client')}
-                </Text>
-                <Text style={styles.userTypeDescription}>
-                  {i18n.t('clientDescription')}
-                </Text>
-              </TouchableOpacity>
+              </LinearGradient>
             </View>
 
-            <TouchableOpacity
-              style={styles.loginLink}
-              onPress={() => {
-                console.log('🔄 Navigating to login');
-                router.push('/auth/login');
-              }}
+            {/* Feature Indicators */}
+            <View style={styles.indicators}>
+              {features.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.indicator,
+                    index === currentFeature && styles.activeIndicator,
+                  ]}
+                />
+              ))}
+            </View>
+          </Animated.View>
+
+          {/* Stats Section */}
+          <Animated.View 
+            entering={SlideInRight.delay(600).duration(800)}
+            style={styles.statsSection}
+          >
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>5K+</Text>
+                <Text style={styles.statLabel}>Active Workers</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>10K+</Text>
+                <Text style={styles.statLabel}>Jobs Completed</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <View style={styles.ratingContainer}>
+                  <Star size={16} color={Colors.secondary} fill={Colors.secondary} />
+                  <Text style={styles.statNumber}>4.8</Text>
+                </View>
+                <Text style={styles.statLabel}>Average Rating</Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          {/* Action Buttons */}
+          <Animated.View 
+            entering={FadeInUp.delay(800).duration(800)}
+            style={styles.actionSection}
+          >
+            <AnimatedTouchableOpacity
+              entering={FadeInUp.delay(900).duration(600)}
+              style={styles.primaryButton}
+              onPress={() => router.push('/auth/signup')}
             >
-              <Text style={styles.loginText}>
-                {language === 'en' 
-                  ? 'Already have an account? Login'
-                  : 'لديك حساب بالفعل؟ تسجيل الدخول'
-                }
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <LinearGradient
+                colors={[Colors.white, 'rgba(255,255,255,0.9)']}
+                style={styles.buttonGradient}
+              >
+                <Text style={styles.primaryButtonText}>Get Started</Text>
+                <ArrowRight size={20} color={Colors.primary} />
+              </LinearGradient>
+            </AnimatedTouchableOpacity>
+
+            <AnimatedTouchableOpacity
+              entering={FadeInUp.delay(1000).duration(600)}
+              style={styles.secondaryButton}
+              onPress={() => router.push('/auth/login')}
+            >
+              <Text style={styles.secondaryButtonText}>Already have an account? Sign In</Text>
+            </AnimatedTouchableOpacity>
+          </Animated.View>
+
+          {/* User Type Preview */}
+          <Animated.View 
+            entering={FadeInDown.delay(1100).duration(800)}
+            style={styles.userTypeSection}
+          >
+            <Text style={styles.userTypeTitle}>Join as</Text>
+            <View style={styles.userTypeCards}>
+              <View style={styles.userTypeCard}>
+                <Users size={32} color={Colors.white} />
+                <Text style={styles.userTypeCardTitle}>Worker</Text>
+                <Text style={styles.userTypeCardDescription}>
+                  Find jobs and build your career
+                </Text>
+              </View>
+              <View style={styles.userTypeCard}>
+                <Briefcase size={32} color={Colors.white} />
+                <Text style={styles.userTypeCardTitle}>Client</Text>
+                <Text style={styles.userTypeCardDescription}>
+                  Hire skilled professionals
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
         </ScrollView>
       </LinearGradient>
     </View>
   );
 }
 
-const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) => StyleSheet.create({
-  fullScreenContainer: {
+const styles = StyleSheet.create({
+  container: {
     flex: 1,
-    width: dimensions.width,
-    height: dimensions.height,
-    backgroundColor: Colors.primary,
   },
   gradient: {
     flex: 1,
-    width: dimensions.width,
-    height: dimensions.height,
   },
   scrollContent: {
     flexGrow: 1,
-    minHeight: dimensions.height,
-    paddingTop: insets.top,
-    paddingBottom: Math.max(insets.bottom, 20),
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
-  header: {
-    alignItems: 'flex-end',
-    padding: responsiveDimensions.padding,
-    paddingTop: isTablet ? 40 : 20,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: responsiveDimensions.padding,
-    paddingBottom: isTablet ? 60 : 40,
-    justifyContent: 'center',
+  heroSection: {
+    alignItems: 'center',
+    marginBottom: 40,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: isTablet ? 40 : 30,
+    marginBottom: 32,
   },
   logo: {
-    fontSize: responsiveDimensions.fontSize.logo,
+    fontSize: 42,
     fontWeight: 'bold',
     color: Colors.white,
     textAlign: 'center',
-    marginBottom: isTablet ? 12 : 8,
+    marginBottom: 8,
   },
   logoSubtitle: {
-    fontSize: responsiveDimensions.fontSize.subtitle,
+    fontSize: 18,
     color: Colors.white,
     opacity: 0.9,
     textAlign: 'center',
   },
-  tagline: {
-    fontSize: responsiveDimensions.fontSize.body,
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
     color: Colors.white,
     textAlign: 'center',
-    marginBottom: isTablet ? 60 : 40,
+    marginBottom: 16,
+    lineHeight: 36,
+  },
+  heroDescription: {
+    fontSize: 16,
+    color: Colors.white,
+    textAlign: 'center',
     opacity: 0.9,
-    lineHeight: isTablet ? 32 : 24,
-    paddingHorizontal: isTablet ? 40 : 0,
+    lineHeight: 24,
+    paddingHorizontal: 20,
   },
-  userTypeContainer: {
-    marginBottom: isTablet ? 50 : 30,
-  },
-  selectTitle: {
-    fontSize: responsiveDimensions.fontSize.subtitle,
-    color: Colors.white,
-    textAlign: 'center',
-    marginBottom: isTablet ? 40 : 30,
-    fontWeight: '600',
-  },
-  userTypeCard: {
-    backgroundColor: Colors.white,
-    borderRadius: isTablet ? 24 : 16,
-    padding: responsiveDimensions.cardPadding,
+  featureShowcase: {
     alignItems: 'center',
-    marginBottom: isTablet ? 24 : 16,
-    shadowColor: Colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    minHeight: isTablet ? 180 : isLargeDevice ? 140 : 120,
+    marginBottom: 40,
+  },
+  featureCard: {
+    width: '100%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+  featureCardGradient: {
+    padding: 32,
+    alignItems: 'center',
+    minHeight: 180,
     justifyContent: 'center',
   },
-  userTypeTitle: {
-    fontSize: responsiveDimensions.fontSize.title,
-    fontWeight: '600',
-    color: Colors.text,
-    marginTop: isTablet ? 20 : 12,
-    marginBottom: isTablet ? 12 : 8,
-  },
-  userTypeDescription: {
-    fontSize: responsiveDimensions.fontSize.small,
-    color: Colors.textSecondary,
+  featureTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.white,
     textAlign: 'center',
-    lineHeight: isTablet ? 24 : 20,
-    paddingHorizontal: isTablet ? 20 : 0,
+    marginTop: 16,
+    marginBottom: 8,
   },
-  loginLink: {
+  featureDescription: {
+    fontSize: 14,
+    color: Colors.white,
+    textAlign: 'center',
+    opacity: 0.9,
+    lineHeight: 20,
+  },
+  indicators: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  activeIndicator: {
+    backgroundColor: Colors.white,
+    width: 24,
+  },
+  statsSection: {
+    marginBottom: 40,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    padding: 24,
     alignItems: 'center',
-    marginTop: isTablet ? 40 : 30,
+    justifyContent: 'space-between',
   },
-  loginText: {
-    fontSize: responsiveDimensions.fontSize.small,
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginHorizontal: 16,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.white,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: Colors.white,
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  actionSection: {
+    marginBottom: 40,
+  },
+  primaryButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: Colors.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    gap: 8,
+  },
+  primaryButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.primary,
+  },
+  secondaryButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  secondaryButtonText: {
+    fontSize: 16,
     color: Colors.white,
     textDecorationLine: 'underline',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  userTypeSection: {
     alignItems: 'center',
-    paddingHorizontal: 40,
   },
-  loadingText: {
-    fontSize: 16,
+  userTypeTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     color: Colors.white,
-    marginTop: 20,
+    marginBottom: 20,
+  },
+  userTypeCards: {
+    flexDirection: 'row',
+    gap: 16,
+    width: '100%',
+  },
+  userTypeCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+  },
+  userTypeCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  userTypeCardDescription: {
+    fontSize: 12,
+    color: Colors.white,
     opacity: 0.8,
+    textAlign: 'center',
+    lineHeight: 16,
   },
 });

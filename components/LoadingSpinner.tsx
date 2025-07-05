@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, StyleSheet, Animated, Dimensions, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 
@@ -10,16 +10,29 @@ interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
   color?: string;
   style?: any;
+  showText?: boolean;
+  text?: string;
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'medium',
   color = Colors.primary,
   style,
+  showText = false,
+  text = 'Loading...',
 }) => {
   const spinValue = useRef(new Animated.Value(0)).current;
+  const fadeValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Start fade in animation
+    Animated.timing(fadeValue, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+
+    // Start spin animation
     const spinAnimation = Animated.loop(
       Animated.timing(spinValue, {
         toValue: 1,
@@ -31,7 +44,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     spinAnimation.start();
 
     return () => spinAnimation.stop();
-  }, [spinValue]);
+  }, [spinValue, fadeValue]);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
@@ -46,7 +59,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       case 'medium':
         return baseSize * 6; // 24dp or 48dp
       case 'large':
-        return baseSize * 8; // 32dp or 64dp
+        return baseSize * 10; // 40dp or 80dp
       default:
         return baseSize * 6;
     }
@@ -55,19 +68,20 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   const spinnerSize = getSize();
 
   return (
-    <View style={[styles.container, style]}>
+    <Animated.View style={[styles.container, style, { opacity: fadeValue }]}>
       <Animated.View
         style={[
           styles.spinner,
           {
             width: spinnerSize,
             height: spinnerSize,
+            borderRadius: spinnerSize / 2,
             transform: [{ rotate: spin }],
           },
         ]}
       >
         <LinearGradient
-          colors={[color, `${color}80`, 'transparent']}
+          colors={[color, `${color}80`, 'transparent', 'transparent']}
           style={[
             styles.gradient,
             {
@@ -80,7 +94,10 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           end={{ x: 1, y: 1 }}
         />
       </Animated.View>
-    </View>
+      {showText && (
+        <Text style={[styles.loadingText, { color }]}>{text}</Text>
+      )}
+    </Animated.View>
   );
 };
 
@@ -88,16 +105,22 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
   spinner: {
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'transparent',
   },
   gradient: {
-    borderWidth: 2,
-    borderColor: 'transparent',
-    borderTopColor: Colors.primary,
-    borderRightColor: Colors.primary,
+    position: 'absolute',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: isTablet ? 18 : 16,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

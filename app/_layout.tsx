@@ -50,6 +50,7 @@ export default function RootLayout() {
   }, [error, clearError]);
 
   useEffect(() => {
+    // Only navigate when everything is ready
     if (initialized && !loading && (fontsLoaded || fontError)) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
       
@@ -63,7 +64,7 @@ export default function RootLayout() {
     }
   }, [user, initialized, loading, router, fontsLoaded, fontError]);
 
-  // Show loading spinner while fonts are loading or auth is initializing
+  // Show loading spinner while fonts are loading
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.fullScreenContainer}>
@@ -72,6 +73,7 @@ export default function RootLayout() {
     );
   }
 
+  // Show loading spinner while auth is initializing
   if (!initialized || loading) {
     return (
       <View style={styles.fullScreenContainer}>

@@ -67,7 +67,7 @@ export const useAuthState = () => {
       console.log('🔄 Attempting login for:', email); // Debug log
       
       // Simulate API delay for realistic UX
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Enhanced mock authentication with better user type detection
       const userType = email.toLowerCase().includes('client') ? 'client' : 'worker';
@@ -103,7 +103,7 @@ export const useAuthState = () => {
       console.log('🔄 Attempting registration for:', userData.email); // Debug log
       
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       const newUser: User = {
         id: Date.now().toString(),
@@ -135,7 +135,7 @@ export const useAuthState = () => {
       console.log('🔄 Logging out user...'); // Debug log
       
       // Simulate logout delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       await AsyncStorage.removeItem('user');
       setUser(null);

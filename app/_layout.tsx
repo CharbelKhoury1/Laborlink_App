@@ -15,6 +15,9 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// Prevent auto-hiding of splash screen
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   useFrameworkReady();
   
@@ -47,7 +50,7 @@ export default function RootLayout() {
   }, [error, clearError]);
 
   useEffect(() => {
-    if (initialized && !loading) {
+    if (initialized && !loading && (fontsLoaded || fontError)) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
       
       if (user) {
@@ -58,9 +61,9 @@ export default function RootLayout() {
         router.replace('/auth');
       }
     }
-  }, [user, initialized, loading, router]);
+  }, [user, initialized, loading, router, fontsLoaded, fontError]);
 
-  // Show loading spinner while fonts are loading
+  // Show loading spinner while fonts are loading or auth is initializing
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.fullScreenContainer}>
@@ -69,7 +72,6 @@ export default function RootLayout() {
     );
   }
 
-  // Show loading spinner while auth is initializing
   if (!initialized || loading) {
     return (
       <View style={styles.fullScreenContainer}>

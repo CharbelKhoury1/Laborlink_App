@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Mail, Send, CheckCircle } from 'lucide-react-native';
+import { ArrowLeft, Mail, Send, CircleCheck as CheckCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

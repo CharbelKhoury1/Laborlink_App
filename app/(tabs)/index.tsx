@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Dimensions, Animated, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSign, Zap, Award, Target, Type } from 'lucide-react-native';
@@ -39,24 +39,24 @@ const modernColors = {
   shadow: 'rgba(0, 0, 0, 0.1)',
 };
 
-// Enhanced responsive dimensions
-const getResponsiveDimensions = () => {
-  const padding = isTablet ? 32 : isLargeDevice ? 24 : 20;
-  const cardPadding = isTablet ? 28 : 24;
-  const borderRadius = isTablet ? 20 : 16;
+// Enhanced responsive dimensions - MEMOIZED
+const getResponsiveDimensions = (width: number) => {
+  const padding = width >= 768 ? 32 : width >= 414 ? 24 : 20;
+  const cardPadding = width >= 768 ? 28 : 24;
+  const borderRadius = width >= 768 ? 20 : 16;
   const fontSize = {
-    hero: isTablet ? 36 : isLargeDevice ? 32 : isSmallDevice ? 26 : 28,
-    title: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
-    subtitle: isTablet ? 20 : isLargeDevice ? 18 : 16,
-    body: isTablet ? 18 : 16,
-    small: isTablet ? 16 : 14,
-    tiny: isTablet ? 14 : 12,
+    hero: width >= 768 ? 36 : width >= 414 ? 32 : width < 375 ? 26 : 28,
+    title: width >= 768 ? 28 : width >= 414 ? 24 : width < 375 ? 20 : 22,
+    subtitle: width >= 768 ? 20 : width >= 414 ? 18 : 16,
+    body: width >= 768 ? 18 : 16,
+    small: width >= 768 ? 16 : 14,
+    tiny: width >= 768 ? 14 : 12,
   };
   
   return { padding, cardPadding, borderRadius, fontSize };
 };
 
-// Mock data with enhanced structure
+// Mock data with enhanced structure - MOVED OUTSIDE COMPONENT
 const mockJobs: Job[] = [
   {
     id: '1',
@@ -107,10 +107,10 @@ export default function HomeScreen() {
   const { user, loading, initialized } = useAuthState();
   const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   const insets = useSafeAreaInsets();
 
-  // Animation values
+  // Animation values - STABLE REFS
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -118,18 +118,46 @@ export default function HomeScreen() {
   const statsAnim = useRef(new Animated.Value(0)).current;
   const jobsAnim = useRef(new Animated.Value(0)).current;
 
+  // MEMOIZED responsive dimensions
+  const responsiveDimensions = useMemo(() => 
+    getResponsiveDimensions(dimensions.width), 
+    [dimensions.width]
+  );
+
+  // MEMOIZED styles
+  const styles = useMemo(() => 
+    createStyles(responsiveDimensions, dimensions, insets), 
+    [responsiveDimensions, dimensions.width, dimensions.height, insets.top, insets.bottom]
+  );
+
+  // FIX: Stable dimensions listener
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
-      setDimensions(window);
+      setDimensions(prevDimensions => {
+        // Only update if dimensions actually changed
+        if (prevDimensions.width !== window.width || prevDimensions.height !== window.height) {
+          return window;
+        }
+        return prevDimensions;
+      });
     });
 
     return () => subscription?.remove();
-  }, []);
+  }, []); // Empty dependency array is correct here
 
+  // FIX: Stable animation effect with proper dependencies
   useEffect(() => {
     console.log('HomeScreen - User:', user, 'Loading:', loading, 'Initialized:', initialized);
     
     if (initialized && user) {
+      // Reset animations first
+      fadeAnim.setValue(0);
+      slideAnim.setValue(50);
+      scaleAnim.setValue(0.95);
+      headerAnim.setValue(0);
+      statsAnim.setValue(0);
+      jobsAnim.setValue(0);
+
       // Entrance animations
       Animated.sequence([
         Animated.parallel([
@@ -167,40 +195,47 @@ export default function HomeScreen() {
           }),
         ]),
       ]).start();
+    }
+  }, [initialized, user]); // Removed animation refs from dependencies
 
-      // Mock loading nearby jobs with animation
-      setTimeout(() => {
+  // FIX: Separate effect for loading jobs
+  useEffect(() => {
+    if (initialized && user && nearbyJobs.length === 0) {
+      const timer = setTimeout(() => {
         setNearbyJobs(mockJobs);
       }, 1200);
+
+      return () => clearTimeout(timer);
     }
-    
-    // Update time every minute
+  }, [initialized, user, nearbyJobs.length]);
+
+  // FIX: Stable time update effect
+  useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
     
     return () => clearInterval(timer);
-  }, [initialized, user]);
+  }, []); // Empty dependency array is correct
 
-  const getGreeting = () => {
+  // MEMOIZED greeting function
+  const getGreeting = useCallback(() => {
     const hour = currentTime.getHours();
     if (hour < 12) return i18n.t('goodMorning');
     if (hour < 18) return i18n.t('goodAfternoon');
     return i18n.t('goodEvening');
-  };
+  }, [currentTime]);
 
-  const handleJobPress = (jobId: string) => {
+  // MEMOIZED job press handler
+  const handleJobPress = useCallback((jobId: string) => {
     router.push({
       pathname: '/(tabs)/jobs/[id]',
       params: { id: jobId }
     });
-  };
+  }, [router]);
 
-  const responsiveDimensions = getResponsiveDimensions();
-  const styles = createStyles(responsiveDimensions, dimensions, insets);
-
-  // Enhanced animated button component
-  const AnimatedButton = ({ onPress, children, style, gradientColors }: any) => {
+  // MEMOIZED animated button component
+  const AnimatedButton = useCallback(({ onPress, children, style, gradientColors }: any) => {
     const buttonScale = useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
@@ -237,7 +272,7 @@ export default function HomeScreen() {
         </LinearGradient>
       </AnimatedTouchableOpacity>
     );
-  };
+  }, [styles.buttonGradient]);
 
   // Show loading state while authentication is being determined
   if (loading || !initialized || !user) {

@@ -18,6 +18,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Prevent auto-hiding of splash screen
 SplashScreen.preventAutoHideAsync();
 
+// 🚨 DEVELOPMENT MODE: Skip auth navigation checks
+// TODO: Remove this flag and restore auth checks before production
+const DEV_MODE_SKIP_AUTH_NAVIGATION = true;
+
 export default function RootLayout() {
   useFrameworkReady();
   
@@ -53,7 +57,7 @@ export default function RootLayout() {
     }
   }, [error, clearError]);
 
-  // Navigation logic - only run when everything is ready
+  // Navigation logic - modified for development mode
   useEffect(() => {
     if (initialized && !loading && (fontsLoaded || fontError) && !navigationReady) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
@@ -61,6 +65,17 @@ export default function RootLayout() {
       // Delay navigation to ensure UI is ready
       const navigationTimeout = setTimeout(() => {
         setNavigationReady(true);
+        
+        // 🚨 DEV MODE: Always navigate to tabs, skip auth checks
+        if (DEV_MODE_SKIP_AUTH_NAVIGATION) {
+          console.log('⚠️ DEVELOPMENT MODE: Skipping auth navigation checks');
+          console.log('✅ Navigating directly to tabs');
+          router.replace('/(tabs)');
+          return;
+        }
+
+        // 🔒 PRODUCTION CODE: Normal navigation logic (currently disabled)
+        /*
         if (user) {
           console.log('✅ Navigating to tabs with user:', user.userType);
           router.replace('/(tabs)');
@@ -68,6 +83,7 @@ export default function RootLayout() {
           console.log('ℹ️ Navigating to auth - no user found');
           router.replace('/auth');
         }
+        */
       }, 300);
 
       return () => clearTimeout(navigationTimeout);
@@ -95,6 +111,9 @@ export default function RootLayout() {
           <Text style={styles.appTitle}>WorkConnect</Text>
           <Text style={styles.appSubtitle}>Lebanon</Text>
           <LoadingSpinner size="large" showText text="Initializing..." />
+          {DEV_MODE_SKIP_AUTH_NAVIGATION && (
+            <Text style={styles.devModeText}>🚨 Development Mode Active</Text>
+          )}
         </View>
       </View>
     );
@@ -108,6 +127,9 @@ export default function RootLayout() {
           <Text style={styles.appTitle}>WorkConnect</Text>
           <Text style={styles.appSubtitle}>Lebanon</Text>
           <LoadingSpinner size="large" showText text="Preparing..." />
+          {DEV_MODE_SKIP_AUTH_NAVIGATION && (
+            <Text style={styles.devModeText}>🚨 Development Mode Active</Text>
+          )}
         </View>
       </View>
     );
@@ -154,5 +176,12 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: 40,
     textAlign: 'center',
+  },
+  devModeText: {
+    fontSize: 14,
+    color: Colors.warning,
+    marginTop: 20,
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
 });

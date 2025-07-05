@@ -23,6 +23,22 @@ export const useAuth = () => {
   return context;
 };
 
+// 🚨 DEVELOPMENT MODE: Authentication disabled for testing
+// TODO: Remove this flag and restore authentication before production
+const DEV_MODE_SKIP_AUTH = true;
+
+// Mock user for development - change userType as needed for testing
+const DEV_MOCK_USER: User = {
+  id: 'dev-user-123',
+  name: 'Development User',
+  email: 'dev@workconnect.com',
+  phone: '+961 70 123 456',
+  userType: 'worker', // Change to 'client' to test client features
+  verified: true,
+  createdAt: new Date(),
+  language: 'en'
+};
+
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,6 +53,19 @@ export const useAuthState = () => {
       try {
         console.log('🔄 Initializing authentication...');
         
+        // 🚨 DEV MODE: Skip authentication and use mock user
+        if (DEV_MODE_SKIP_AUTH) {
+          console.log('⚠️ DEVELOPMENT MODE: Authentication bypassed');
+          console.log('✅ Using mock user:', DEV_MOCK_USER.email, DEV_MOCK_USER.userType);
+          if (isMounted) {
+            setUser(DEV_MOCK_USER);
+            setInitialized(true);
+          }
+          return;
+        }
+
+        // 🔒 PRODUCTION CODE: Normal authentication flow (currently disabled)
+        /*
         const userData = await AsyncStorage.getItem('user');
         if (userData && isMounted) {
           const parsedUser = JSON.parse(userData);
@@ -45,6 +74,7 @@ export const useAuthState = () => {
         } else if (isMounted) {
           console.log('ℹ️ No user found in storage');
         }
+        */
       } catch (error) {
         console.error('❌ Error loading user:', error);
         if (isMounted) {
@@ -75,6 +105,27 @@ export const useAuthState = () => {
       setError(null);
       console.log('🔄 Attempting login for:', email);
       
+      // 🚨 DEV MODE: Always succeed with mock user
+      if (DEV_MODE_SKIP_AUTH) {
+        console.log('⚠️ DEVELOPMENT MODE: Login bypassed');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+        
+        // Determine user type based on email for testing
+        const userType = email.toLowerCase().includes('client') ? 'client' : 'worker';
+        const mockUser: User = {
+          ...DEV_MOCK_USER,
+          email,
+          userType,
+          name: userType === 'client' ? 'Test Client' : 'Test Worker'
+        };
+        
+        console.log('✅ Mock login successful:', mockUser.email, mockUser.userType);
+        setUser(mockUser);
+        return true;
+      }
+
+      // 🔒 PRODUCTION CODE: Normal login flow (currently disabled)
+      /*
       // Simulate API delay for realistic UX
       await new Promise(resolve => setTimeout(resolve, 800));
       
@@ -96,6 +147,7 @@ export const useAuthState = () => {
       await AsyncStorage.setItem('user', JSON.stringify(mockUser));
       setUser(mockUser);
       return true;
+      */
     } catch (error) {
       console.error('❌ Login error:', error);
       setError('Login failed. Please check your credentials.');
@@ -111,6 +163,26 @@ export const useAuthState = () => {
       setError(null);
       console.log('🔄 Attempting registration for:', userData.email);
       
+      // 🚨 DEV MODE: Always succeed with mock user
+      if (DEV_MODE_SKIP_AUTH) {
+        console.log('⚠️ DEVELOPMENT MODE: Registration bypassed');
+        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+        
+        const newUser: User = {
+          ...DEV_MOCK_USER,
+          name: userData.name || 'Test User',
+          email: userData.email || 'test@workconnect.com',
+          phone: userData.phone || '+961 70 123 456',
+          userType: userData.userType || 'worker',
+        };
+        
+        console.log('✅ Mock registration successful:', newUser.email, newUser.userType);
+        setUser(newUser);
+        return true;
+      }
+
+      // 🔒 PRODUCTION CODE: Normal registration flow (currently disabled)
+      /*
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -129,6 +201,7 @@ export const useAuthState = () => {
       await AsyncStorage.setItem('user', JSON.stringify(newUser));
       setUser(newUser);
       return true;
+      */
     } catch (error) {
       console.error('❌ Registration error:', error);
       setError('Registration failed. Please try again.');
@@ -143,6 +216,18 @@ export const useAuthState = () => {
       setLoading(true);
       console.log('🔄 Logging out user...');
       
+      // 🚨 DEV MODE: Quick logout without storage operations
+      if (DEV_MODE_SKIP_AUTH) {
+        console.log('⚠️ DEVELOPMENT MODE: Logout bypassed');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        setUser(null);
+        setError(null);
+        console.log('✅ Mock logout successful');
+        return;
+      }
+
+      // 🔒 PRODUCTION CODE: Normal logout flow (currently disabled)
+      /*
       // Simulate logout delay for better UX
       await new Promise(resolve => setTimeout(resolve, 200));
       
@@ -150,6 +235,7 @@ export const useAuthState = () => {
       setUser(null);
       setError(null);
       console.log('✅ User logged out successfully');
+      */
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed. Please try again.');

@@ -8,6 +8,10 @@ import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 
+// 🚨 DEVELOPMENT MODE: Disable user type checks
+// TODO: Remove this flag and restore user type checks before production
+const DEV_MODE_SKIP_USER_TYPE_CHECKS = true;
+
 // Mock job data - in real app, fetch from API
 const mockJobDetails: Job = {
   id: '1',
@@ -27,6 +31,8 @@ const mockJobDetails: Job = {
   urgency: 'high',
   status: 'open',
   createdAt: new Date(),
+  scheduledDate: new Date(),
+  assignedWorkerId: undefined,
   photos: [
     'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=800',
     'https://images.pexels.com/photos/1216544/pexels-photo-1216544.jpeg?auto=compress&cs=tinysrgb&w=800'
@@ -56,7 +62,8 @@ export default function JobDetailsScreen() {
   }, [id]);
 
   const handleApply = () => {
-    if (user?.userType === 'worker') {
+    // 🚨 DEV MODE: Allow all users to apply regardless of type
+    if (DEV_MODE_SKIP_USER_TYPE_CHECKS || user?.userType === 'worker') {
       Alert.alert(
         'Apply for Job',
         'Are you sure you want to apply for this job?',
@@ -71,6 +78,11 @@ export default function JobDetailsScreen() {
           }
         ]
       );
+    } else {
+      // 🔒 PRODUCTION CODE: Normal user type check (currently disabled)
+      /*
+      Alert.alert('Error', 'Only workers can apply for jobs');
+      */
     }
   };
 
@@ -95,6 +107,9 @@ export default function JobDetailsScreen() {
     }
   };
 
+  // 🚨 DEV MODE: Show apply button for all users
+  const shouldShowApplyButton = DEV_MODE_SKIP_USER_TYPE_CHECKS || user?.userType === 'worker';
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -113,6 +128,13 @@ export default function JobDetailsScreen() {
               <Image key={index} source={{ uri: photo }} style={styles.jobPhoto} />
             ))}
           </ScrollView>
+        )}
+
+        {/* Development Mode Indicator */}
+        {DEV_MODE_SKIP_USER_TYPE_CHECKS && (
+          <View style={styles.devModeIndicator}>
+            <Text style={styles.devModeText}>🚨 Development Mode: User type checks disabled</Text>
+          </View>
         )}
 
         {/* Job Header */}
@@ -205,8 +227,8 @@ export default function JobDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      {user?.userType === 'worker' && (
+      {/* Bottom Action Bar - Modified for development mode */}
+      {shouldShowApplyButton && (
         <View style={styles.bottomBar}>
           <TouchableOpacity 
             style={[styles.applyButton, applied && styles.appliedButton]}
@@ -263,6 +285,20 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 12,
     marginRight: 12,
+  },
+  devModeIndicator: {
+    backgroundColor: Colors.warning,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    borderRadius: 8,
+  },
+  devModeText: {
+    fontSize: 14,
+    color: Colors.white,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   jobHeader: {
     paddingHorizontal: 20,

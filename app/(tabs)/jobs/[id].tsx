@@ -8,9 +8,8 @@ import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 
-// 🚨 DEVELOPMENT MODE: Disable user type checks
-// TODO: Remove this flag and restore user type checks before production
-const DEV_MODE_SKIP_USER_TYPE_CHECKS = true;
+// 🔒 PRODUCTION MODE: Normal user type checks
+const DEV_MODE_SKIP_USER_TYPE_CHECKS = false;
 
 // Mock job data - in real app, fetch from API
 const mockJobDetails: Job = {
@@ -79,10 +78,8 @@ export default function JobDetailsScreen() {
         ]
       );
     } else {
-      // 🔒 PRODUCTION CODE: Normal user type check (currently disabled)
-      /*
+      // 🔒 PRODUCTION CODE: Normal user type check
       Alert.alert('Error', 'Only workers can apply for jobs');
-      */
     }
   };
 
@@ -227,7 +224,7 @@ export default function JobDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar - Modified for development mode */}
+      {/* Bottom Action Bar - Modified for production mode */}
       {shouldShowApplyButton && (
         <View style={styles.bottomBar}>
           <TouchableOpacity 

@@ -23,17 +23,16 @@ export const useAuth = () => {
   return context;
 };
 
-// 🚨 DEVELOPMENT MODE: Authentication disabled for testing
-// TODO: Remove this flag and restore authentication before production
-const DEV_MODE_SKIP_AUTH = true;
+// 🔒 PRODUCTION MODE: Authentication enabled
+const DEV_MODE_SKIP_AUTH = false;
 
-// Mock user for development - change userType as needed for testing
+// Mock user for development - only used when DEV_MODE_SKIP_AUTH is true
 const DEV_MOCK_USER: User = {
   id: 'dev-user-123',
   name: 'Development User',
   email: 'dev@workconnect.com',
   phone: '+961 70 123 456',
-  userType: 'worker', // Change to 'client' to test client features
+  userType: 'worker',
   verified: true,
   createdAt: new Date(),
   language: 'en'
@@ -74,8 +73,7 @@ export const useAuthState = () => {
           return DEV_MOCK_USER;
         }
 
-        // 🔒 PRODUCTION CODE: Normal authentication flow (currently disabled)
-        /*
+        // 🔒 PRODUCTION CODE: Normal authentication flow
         const userData = await AsyncStorage.getItem('user');
         if (userData) {
           const parsedUser = JSON.parse(userData);
@@ -85,8 +83,6 @@ export const useAuthState = () => {
           console.log('ℹ️ No user found in storage');
           return null;
         }
-        */
-        return null;
       } catch (error) {
         console.error('❌ Error loading user:', error);
         throw new Error('Failed to load user data');
@@ -139,8 +135,7 @@ export const useAuthState = () => {
         return true;
       }
 
-      // 🔒 PRODUCTION CODE: Normal login flow (currently disabled)
-      /*
+      // 🔒 PRODUCTION CODE: Normal login flow
       // Simulate API delay for realistic UX
       await new Promise(resolve => setTimeout(resolve, 800));
       
@@ -162,7 +157,6 @@ export const useAuthState = () => {
       await AsyncStorage.setItem('user', JSON.stringify(mockUser));
       setUser(mockUser);
       return true;
-      */
     } catch (error) {
       console.error('❌ Login error:', error);
       setError('Login failed. Please check your credentials.');
@@ -196,8 +190,7 @@ export const useAuthState = () => {
         return true;
       }
 
-      // 🔒 PRODUCTION CODE: Normal registration flow (currently disabled)
-      /*
+      // 🔒 PRODUCTION CODE: Normal registration flow
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -216,7 +209,6 @@ export const useAuthState = () => {
       await AsyncStorage.setItem('user', JSON.stringify(newUser));
       setUser(newUser);
       return true;
-      */
     } catch (error) {
       console.error('❌ Registration error:', error);
       setError('Registration failed. Please try again.');
@@ -244,16 +236,17 @@ export const useAuthState = () => {
         return;
       }
 
-      // 🔒 PRODUCTION CODE: Normal logout flow (currently disabled)
-      /*
+      // 🔒 PRODUCTION CODE: Normal logout flow
       // Simulate logout delay for better UX
       await new Promise(resolve => setTimeout(resolve, 200));
       
       await AsyncStorage.removeItem('user');
       setUser(null);
       setError(null);
+      // Reset auth state for next login
+      authInitialized = false;
+      authPromise = null;
       console.log('✅ User logged out successfully');
-      */
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed. Please try again.');

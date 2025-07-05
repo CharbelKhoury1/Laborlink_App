@@ -6,9 +6,8 @@ import Colors from '@/constants/Colors';
 import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
 
-// 🚨 DEVELOPMENT MODE: Disable user type checks
-// TODO: Remove this flag and restore user type checks before production
-const DEV_MODE_SKIP_USER_TYPE_CHECKS = true;
+// 🔒 PRODUCTION MODE: Normal user type checks
+const DEV_MODE_SKIP_USER_TYPE_CHECKS = false;
 
 const URGENCY_OPTIONS = [
   { value: 'low', label: 'Low Priority', color: Colors.success },

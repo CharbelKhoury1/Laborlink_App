@@ -18,9 +18,8 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Prevent auto-hiding of splash screen
 SplashScreen.preventAutoHideAsync();
 
-// 🚨 DEVELOPMENT MODE: Skip auth navigation checks
-// TODO: Remove this flag and restore auth checks before production
-const DEV_MODE_SKIP_AUTH_NAVIGATION = true;
+// 🔒 PRODUCTION MODE: Normal auth navigation
+const DEV_MODE_SKIP_AUTH_NAVIGATION = false;
 
 export default function RootLayout() {
   useFrameworkReady();
@@ -57,7 +56,7 @@ export default function RootLayout() {
     }
   }, [error, clearError]);
 
-  // Navigation logic - modified for development mode
+  // Navigation logic - restored production mode
   useEffect(() => {
     if (initialized && !loading && (fontsLoaded || fontError) && !navigationReady) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
@@ -74,8 +73,7 @@ export default function RootLayout() {
           return;
         }
 
-        // 🔒 PRODUCTION CODE: Normal navigation logic (currently disabled)
-        /*
+        // 🔒 PRODUCTION CODE: Normal navigation logic
         if (user) {
           console.log('✅ Navigating to tabs with user:', user.userType);
           router.replace('/(tabs)');
@@ -83,7 +81,6 @@ export default function RootLayout() {
           console.log('ℹ️ Navigating to auth - no user found');
           router.replace('/auth');
         }
-        */
       }, 300);
 
       return () => clearTimeout(navigationTimeout);

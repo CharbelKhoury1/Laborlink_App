@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Dimensions } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
@@ -14,6 +14,7 @@ export default function Register() {
   const { userType } = useLocalSearchParams<{ userType: 'worker' | 'client' }>();
   const { register, loading } = useAuthState();
   const insets = useSafeAreaInsets();
+  const [isReady, setIsReady] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -24,6 +25,18 @@ export default function Register() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  useEffect(() => {
+    console.log('🔄 Register screen mounted with userType:', userType);
+    
+    // Small delay to ensure screen is ready
+    const readyTimeout = setTimeout(() => {
+      setIsReady(true);
+      console.log('✅ Register screen ready');
+    }, 100);
+
+    return () => clearTimeout(readyTimeout);
+  }, [userType]);
 
   const handleRegister = async () => {
     if (!formData.name || !formData.email || !formData.phone || !formData.password) {
@@ -52,6 +65,17 @@ export default function Register() {
       Alert.alert('Error', 'Registration failed');
     }
   };
+
+  // Show loading state while screen is preparing
+  if (!isReady) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.fullScreenContainer}>
@@ -287,6 +311,15 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
     color: Colors.textSecondary,
   },
 });

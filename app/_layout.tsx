@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -8,7 +8,7 @@ import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { useAuthState } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import { View, StyleSheet, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, Alert, Dimensions, Text } from 'react-native';
 import Colors from '@/constants/Colors';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -23,6 +23,7 @@ export default function RootLayout() {
   
   const router = useRouter();
   const { user, initialized, loading, error, clearError } = useAuthState();
+  const [navigationReady, setNavigationReady] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
     'Cairo-Regular': Cairo_400Regular,
@@ -54,11 +55,12 @@ export default function RootLayout() {
 
   // Navigation logic - only run when everything is ready
   useEffect(() => {
-    if (initialized && !loading && (fontsLoaded || fontError)) {
+    if (initialized && !loading && (fontsLoaded || fontError) && !navigationReady) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
       
-      // Small delay to ensure UI is ready
+      // Delay navigation to ensure UI is ready
       const navigationTimeout = setTimeout(() => {
+        setNavigationReady(true);
         if (user) {
           console.log('✅ Navigating to tabs with user:', user.userType);
           router.replace('/(tabs)');
@@ -66,17 +68,21 @@ export default function RootLayout() {
           console.log('ℹ️ Navigating to auth - no user found');
           router.replace('/auth');
         }
-      }, 100);
+      }, 300);
 
       return () => clearTimeout(navigationTimeout);
     }
-  }, [user, initialized, loading, router, fontsLoaded, fontError]);
+  }, [user, initialized, loading, router, fontsLoaded, fontError, navigationReady]);
 
-  // Show loading while fonts are loading OR auth is initializing
+  // Show loading while fonts are loading
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.fullScreenContainer}>
-        <LoadingSpinner size="large" showText text="Loading fonts..." />
+        <View style={styles.loadingContent}>
+          <Text style={styles.appTitle}>WorkConnect</Text>
+          <Text style={styles.appSubtitle}>Lebanon</Text>
+          <LoadingSpinner size="large" showText text="Loading fonts..." />
+        </View>
       </View>
     );
   }
@@ -85,7 +91,24 @@ export default function RootLayout() {
   if (!initialized || loading) {
     return (
       <View style={styles.fullScreenContainer}>
-        <LoadingSpinner size="large" showText text="Initializing..." />
+        <View style={styles.loadingContent}>
+          <Text style={styles.appTitle}>WorkConnect</Text>
+          <Text style={styles.appSubtitle}>Lebanon</Text>
+          <LoadingSpinner size="large" showText text="Initializing..." />
+        </View>
+      </View>
+    );
+  }
+
+  // Show loading while navigation is preparing
+  if (!navigationReady) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <View style={styles.loadingContent}>
+          <Text style={styles.appTitle}>WorkConnect</Text>
+          <Text style={styles.appSubtitle}>Lebanon</Text>
+          <LoadingSpinner size="large" showText text="Preparing..." />
+        </View>
       </View>
     );
   }
@@ -113,5 +136,23 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  appTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: Colors.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  appSubtitle: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginBottom: 40,
+    textAlign: 'center',
   },
 });

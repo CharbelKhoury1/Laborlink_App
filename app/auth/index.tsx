@@ -35,14 +35,26 @@ export default function AuthIndex() {
   const router = useRouter();
   const [language, setLanguage] = useState<'en' | 'ar'>('en');
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const [isReady, setIsReady] = useState(false);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
+    console.log('🔄 Auth index screen mounted');
+    
+    // Small delay to ensure screen is ready
+    const readyTimeout = setTimeout(() => {
+      setIsReady(true);
+      console.log('✅ Auth index screen ready');
+    }, 100);
+
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
       setDimensions(window);
     });
 
-    return () => subscription?.remove();
+    return () => {
+      clearTimeout(readyTimeout);
+      subscription?.remove();
+    };
   }, []);
 
   const handleUserTypeSelect = (userType: 'worker' | 'client') => {
@@ -52,6 +64,24 @@ export default function AuthIndex() {
 
   const responsiveDimensions = getResponsiveDimensions();
   const styles = createStyles(responsiveDimensions, dimensions, insets);
+
+  // Show loading state while screen is preparing
+  if (!isReady) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <LinearGradient
+          colors={[Colors.primary, Colors.primaryLight]}
+          style={styles.gradient}
+        >
+          <View style={styles.loadingContainer}>
+            <Text style={styles.logo}>WorkConnect</Text>
+            <Text style={styles.logoSubtitle}>Lebanon</Text>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.fullScreenContainer}>
@@ -241,5 +271,17 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     fontSize: responsiveDimensions.fontSize.small,
     color: Colors.white,
     textDecorationLine: 'underline',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.white,
+    marginTop: 20,
+    opacity: 0.8,
   },
 });

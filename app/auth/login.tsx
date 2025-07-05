@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Eye, EyeOff, Mail, Lock } from 'lucide-react-native';
@@ -19,6 +19,19 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{email?: string, password?: string}>({});
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    console.log('🔄 Login screen mounted');
+    
+    // Small delay to ensure screen is ready
+    const readyTimeout = setTimeout(() => {
+      setIsReady(true);
+      console.log('✅ Login screen ready');
+    }, 100);
+
+    return () => clearTimeout(readyTimeout);
+  }, []);
 
   const validateForm = () => {
     const newErrors: {email?: string, password?: string} = {};
@@ -47,6 +60,22 @@ export default function Login() {
       Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
     }
   };
+
+  // Show loading state while screen is preparing
+  if (!isReady) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <LinearGradient
+          colors={[Colors.primary, Colors.primaryLight]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.fullScreenContainer}>
@@ -287,5 +316,15 @@ const styles = StyleSheet.create({
   registerLinkHighlight: {
     color: Colors.primary,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.white,
+    opacity: 0.8,
   },
 });

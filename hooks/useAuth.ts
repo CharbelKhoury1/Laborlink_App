@@ -39,17 +39,31 @@ const DEV_MOCK_USER: User = {
   language: 'en'
 };
 
+// Singleton to prevent multiple initializations
+let authInitialized = false;
+let authPromise: Promise<User | null> | null = null;
+
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize auth state only once
+  // Initialize auth state only once using singleton pattern
   useEffect(() => {
-    let isMounted = true;
-    
-    const initializeAuth = async () => {
+    if (authInitialized) {
+      // If already initialized, just set the current state
+      if (DEV_MODE_SKIP_AUTH) {
+        setUser(DEV_MOCK_USER);
+        setInitialized(true);
+      }
+      return;
+    }
+
+    // Mark as initializing to prevent multiple calls
+    authInitialized = true;
+
+    const initializeAuth = async (): Promise<User | null> => {
       try {
         console.log('🔄 Initializing authentication...');
         
@@ -57,42 +71,43 @@ export const useAuthState = () => {
         if (DEV_MODE_SKIP_AUTH) {
           console.log('⚠️ DEVELOPMENT MODE: Authentication bypassed');
           console.log('✅ Using mock user:', DEV_MOCK_USER.email, DEV_MOCK_USER.userType);
-          if (isMounted) {
-            setUser(DEV_MOCK_USER);
-            setInitialized(true);
-          }
-          return;
+          return DEV_MOCK_USER;
         }
 
         // 🔒 PRODUCTION CODE: Normal authentication flow (currently disabled)
         /*
         const userData = await AsyncStorage.getItem('user');
-        if (userData && isMounted) {
+        if (userData) {
           const parsedUser = JSON.parse(userData);
           console.log('✅ User loaded from storage:', parsedUser.email, parsedUser.userType);
-          setUser(parsedUser);
-        } else if (isMounted) {
+          return parsedUser;
+        } else {
           console.log('ℹ️ No user found in storage');
+          return null;
         }
         */
+        return null;
       } catch (error) {
         console.error('❌ Error loading user:', error);
-        if (isMounted) {
-          setError('Failed to load user data');
-        }
-      } finally {
-        if (isMounted) {
-          setInitialized(true);
-          console.log('✅ Auth initialization completed');
-        }
+        throw new Error('Failed to load user data');
       }
     };
 
-    initializeAuth();
+    // Create or reuse the auth promise
+    if (!authPromise) {
+      authPromise = initializeAuth();
+    }
 
-    return () => {
-      isMounted = false;
-    };
+    authPromise
+      .then((userData) => {
+        setUser(userData);
+        setInitialized(true);
+        console.log('✅ Auth initialization completed');
+      })
+      .catch((error) => {
+        setError(error.message);
+        setInitialized(true);
+      });
   }, []); // Empty dependency array - only run once
 
   const clearError = () => {
@@ -222,6 +237,9 @@ export const useAuthState = () => {
         await new Promise(resolve => setTimeout(resolve, 200));
         setUser(null);
         setError(null);
+        // Reset auth state for next login
+        authInitialized = false;
+        authPromise = null;
         console.log('✅ Mock logout successful');
         return;
       }

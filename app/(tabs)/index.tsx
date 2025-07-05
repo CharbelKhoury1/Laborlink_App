@@ -106,7 +106,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user, loading, initialized } = useAuthState();
   const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   const insets = useSafeAreaInsets();
 
@@ -147,7 +147,7 @@ export default function HomeScreen() {
 
   // FIX: Stable animation effect with proper dependencies
   useEffect(() => {
-    console.log('HomeScreen - User:', user, 'Loading:', loading, 'Initialized:', initialized);
+    console.log('HomeScreen - User:', user?.email, 'Loading:', loading, 'Initialized:', initialized);
     
     if (initialized && user) {
       // Reset animations first
@@ -196,7 +196,7 @@ export default function HomeScreen() {
         ]),
       ]).start();
     }
-  }, [initialized, user]); // Removed animation refs from dependencies
+  }, [initialized, user?.id]); // Only depend on user ID to prevent re-runs
 
   // FIX: Separate effect for loading jobs
   useEffect(() => {
@@ -207,7 +207,7 @@ export default function HomeScreen() {
 
       return () => clearTimeout(timer);
     }
-  }, [initialized, user, nearbyJobs.length]);
+  }, [initialized, user?.id, nearbyJobs.length]);
 
   // FIX: Stable time update effect
   useEffect(() => {

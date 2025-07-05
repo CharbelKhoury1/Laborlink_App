@@ -239,6 +239,33 @@ export default function HomeScreen() {
     );
   };
 
+  // Show loading state while authentication is being determined
+  if (loading || !initialized || !user) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <LinearGradient
+          colors={[modernColors.primary, modernColors.primaryLight, modernColors.secondary]}
+          style={styles.loadingGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <AnimatedView
+            style={{
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            }}
+          >
+            <Text style={styles.loadingTitle}>WorkConnect</Text>
+            <Text style={styles.loadingSubtitle}>Lebanon</Text>
+            <View style={styles.loadingIndicator}>
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          </AnimatedView>
+        </LinearGradient>
+      </View>
+    );
+  }
+
   const renderWorkerHome = () => (
     <View style={styles.fullScreenContainer}>
       <ScrollView 
@@ -706,56 +733,6 @@ export default function HomeScreen() {
     </View>
   );
 
-  // Show loading state while authentication is being determined
-  if (loading || !initialized) {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <LinearGradient
-          colors={[modernColors.primary, modernColors.primaryLight, modernColors.secondary]}
-          style={styles.loadingGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <AnimatedView
-            style={{
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            }}
-          >
-            <Text style={styles.loadingTitle}>WorkConnect</Text>
-            <Text style={styles.loadingSubtitle}>Lebanon</Text>
-            <View style={styles.loadingIndicator}>
-              <Text style={styles.loadingText}>Loading...</Text>
-            </View>
-          </AnimatedView>
-        </LinearGradient>
-      </View>
-    );
-  }
-
-  // Show error state if user is not found
-  if (!user) {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <LinearGradient
-          colors={[modernColors.accent, modernColors.accentLight]}
-          style={styles.loadingGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <Text style={styles.loadingTitle}>Authentication Error</Text>
-          <Text style={styles.loadingSubtitle}>Please try logging in again</Text>
-          <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={() => router.replace('/auth')}
-          >
-            <Text style={styles.retryButtonText}>Go to Login</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-    );
-  }
-
   console.log('Rendering home for user type:', user.userType);
   return user.userType === 'worker' ? renderWorkerHome() : renderClientHome();
 }
@@ -807,18 +784,6 @@ const createStyles = (responsiveDimensions: any, dimensions: any, insets: any) =
     color: modernColors.surface,
     fontSize: responsiveDimensions.fontSize.body,
     fontWeight: '500',
-  },
-  retryButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    marginTop: 20,
-  },
-  retryButtonText: {
-    color: modernColors.surface,
-    fontSize: responsiveDimensions.fontSize.body,
-    fontWeight: '600',
   },
   headerContainer: {
     marginBottom: isTablet ? -25 : -20,

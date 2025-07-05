@@ -46,6 +46,7 @@ export default function AuthIndex() {
   }, []);
 
   const handleUserTypeSelect = (userType: 'worker' | 'client') => {
+    console.log('🔄 Navigating to register with userType:', userType);
     router.push(`/auth/register?userType=${userType}`);
   };
 
@@ -117,7 +118,10 @@ export default function AuthIndex() {
 
             <TouchableOpacity
               style={styles.loginLink}
-              onPress={() => router.push('/auth/login')}
+              onPress={() => {
+                console.log('🔄 Navigating to login');
+                router.push('/auth/login');
+              }}
             >
               <Text style={styles.loginText}>
                 {language === 'en' 

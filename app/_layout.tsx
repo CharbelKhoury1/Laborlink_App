@@ -31,12 +31,15 @@ export default function RootLayout() {
     'Inter-SemiBold': Inter_600SemiBold,
   });
 
+  // Hide splash screen when everything is ready
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if ((fontsLoaded || fontError) && initialized) {
+      console.log('✅ Hiding splash screen - Fonts loaded:', fontsLoaded, 'Auth initialized:', initialized);
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, initialized]);
 
+  // Handle authentication errors
   useEffect(() => {
     if (error) {
       Alert.alert(
@@ -49,35 +52,40 @@ export default function RootLayout() {
     }
   }, [error, clearError]);
 
+  // Navigation logic - only run when everything is ready
   useEffect(() => {
-    // Only navigate when everything is ready
     if (initialized && !loading && (fontsLoaded || fontError)) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
       
-      if (user) {
-        console.log('✅ Navigating to tabs with user:', user.userType);
-        router.replace('/(tabs)');
-      } else {
-        console.log('ℹ️ Navigating to auth - no user found');
-        router.replace('/auth');
-      }
+      // Small delay to ensure UI is ready
+      const navigationTimeout = setTimeout(() => {
+        if (user) {
+          console.log('✅ Navigating to tabs with user:', user.userType);
+          router.replace('/(tabs)');
+        } else {
+          console.log('ℹ️ Navigating to auth - no user found');
+          router.replace('/auth');
+        }
+      }, 100);
+
+      return () => clearTimeout(navigationTimeout);
     }
   }, [user, initialized, loading, router, fontsLoaded, fontError]);
 
-  // Show loading spinner while fonts are loading
+  // Show loading while fonts are loading OR auth is initializing
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.fullScreenContainer}>
-        <LoadingSpinner size="large" />
+        <LoadingSpinner size="large" showText text="Loading fonts..." />
       </View>
     );
   }
 
-  // Show loading spinner while auth is initializing
+  // Show loading while auth is initializing
   if (!initialized || loading) {
     return (
       <View style={styles.fullScreenContainer}>
-        <LoadingSpinner size="large" />
+        <LoadingSpinner size="large" showText text="Initializing..." />
       </View>
     );
   }

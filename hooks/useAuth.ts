@@ -29,45 +29,54 @@ export const useAuthState = () => {
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize auth state only once
   useEffect(() => {
-    loadUser();
-  }, []);
+    let isMounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        console.log('🔄 Initializing authentication...');
+        
+        const userData = await AsyncStorage.getItem('user');
+        if (userData && isMounted) {
+          const parsedUser = JSON.parse(userData);
+          console.log('✅ User loaded from storage:', parsedUser.email, parsedUser.userType);
+          setUser(parsedUser);
+        } else if (isMounted) {
+          console.log('ℹ️ No user found in storage');
+        }
+      } catch (error) {
+        console.error('❌ Error loading user:', error);
+        if (isMounted) {
+          setError('Failed to load user data');
+        }
+      } finally {
+        if (isMounted) {
+          setInitialized(true);
+          console.log('✅ Auth initialization completed');
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - only run once
 
   const clearError = () => {
     setError(null);
-  };
-
-  const loadUser = async () => {
-    try {
-      setLoading(true);
-      console.log('🔄 Loading user from storage...'); // Debug log
-      
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        console.log('✅ User loaded successfully:', parsedUser.email, parsedUser.userType); // Debug log
-        setUser(parsedUser);
-      } else {
-        console.log('ℹ️ No user found in storage'); // Debug log
-      }
-    } catch (error) {
-      console.error('❌ Error loading user:', error);
-      setError('Failed to load user data');
-    } finally {
-      setLoading(false);
-      setInitialized(true);
-      console.log('✅ Auth initialization completed'); // Debug log
-    }
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Attempting login for:', email); // Debug log
+      console.log('🔄 Attempting login for:', email);
       
       // Simulate API delay for realistic UX
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       // Enhanced mock authentication with better user type detection
       const userType = email.toLowerCase().includes('client') ? 'client' : 'worker';
@@ -83,7 +92,7 @@ export const useAuthState = () => {
         language: 'en'
       };
       
-      console.log('✅ Login successful, saving user:', mockUser.email, mockUser.userType); // Debug log
+      console.log('✅ Login successful, saving user:', mockUser.email, mockUser.userType);
       await AsyncStorage.setItem('user', JSON.stringify(mockUser));
       setUser(mockUser);
       return true;
@@ -100,10 +109,10 @@ export const useAuthState = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔄 Attempting registration for:', userData.email); // Debug log
+      console.log('🔄 Attempting registration for:', userData.email);
       
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const newUser: User = {
         id: Date.now().toString(),
@@ -116,7 +125,7 @@ export const useAuthState = () => {
         language: 'en'
       };
       
-      console.log('✅ Registration successful, saving user:', newUser.email, newUser.userType); // Debug log
+      console.log('✅ Registration successful, saving user:', newUser.email, newUser.userType);
       await AsyncStorage.setItem('user', JSON.stringify(newUser));
       setUser(newUser);
       return true;
@@ -132,15 +141,15 @@ export const useAuthState = () => {
   const logout = async (): Promise<void> => {
     try {
       setLoading(true);
-      console.log('🔄 Logging out user...'); // Debug log
+      console.log('🔄 Logging out user...');
       
       // Simulate logout delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       await AsyncStorage.removeItem('user');
       setUser(null);
       setError(null);
-      console.log('✅ User logged out successfully'); // Debug log
+      console.log('✅ User logged out successfully');
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed. Please try again.');

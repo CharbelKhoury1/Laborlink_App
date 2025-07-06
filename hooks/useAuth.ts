@@ -1,6 +1,6 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { User, WorkerProfile, ClientProfile } from '@/types';
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -14,14 +14,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
 
 // 🔒 PRODUCTION MODE: Authentication enabled
 const DEV_MODE_SKIP_AUTH = false;
@@ -38,73 +30,97 @@ const DEV_MOCK_USER: User = {
   language: 'en'
 };
 
-// Singleton to prevent multiple initializations
-let authInitialized = false;
-let authPromise: Promise<User | null> | null = null;
+// Global auth state to prevent multiple initializations
+let globalAuthState = {
+  user: null as User | null,
+  initialized: false,
+  loading: false,
+};
 
-export const useAuthState = () => {
-  const [user, setUser] = useState<User | null>(null);
+let authPromise: Promise<User | null> | null = null;
+let authListeners: Set<(state: typeof globalAuthState) => void> = new Set();
+
+const notifyListeners = () => {
+  authListeners.forEach(listener => listener(globalAuthState));
+};
+
+const initializeAuth = async (): Promise<User | null> => {
+  if (authPromise) {
+    return authPromise;
+  }
+
+  authPromise = (async () => {
+    try {
+      console.log('🔄 Initializing authentication...');
+      
+      // 🚨 DEV MODE: Skip authentication and use mock user
+      if (DEV_MODE_SKIP_AUTH) {
+        console.log('⚠️ DEVELOPMENT MODE: Authentication bypassed');
+        console.log('✅ Using mock user:', DEV_MOCK_USER.email, DEV_MOCK_USER.userType);
+        return DEV_MOCK_USER;
+      }
+
+      // 🔒 PRODUCTION CODE: Normal authentication flow
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        console.log('✅ User loaded from storage:', parsedUser.email, parsedUser.userType);
+        return parsedUser;
+      } else {
+        console.log('ℹ️ No user found in storage');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error loading user:', error);
+      throw new Error('Failed to load user data');
+    }
+  })();
+
+  return authPromise;
+};
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(globalAuthState.user);
   const [loading, setLoading] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(globalAuthState.initialized);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize auth state only once using singleton pattern
+  // Subscribe to global auth state changes
   useEffect(() => {
-    if (authInitialized) {
-      // If already initialized, just set the current state
-      if (DEV_MODE_SKIP_AUTH) {
-        setUser(DEV_MOCK_USER);
-        setInitialized(true);
-      }
-      return;
-    }
-
-    // Mark as initializing to prevent multiple calls
-    authInitialized = true;
-
-    const initializeAuth = async (): Promise<User | null> => {
-      try {
-        console.log('🔄 Initializing authentication...');
-        
-        // 🚨 DEV MODE: Skip authentication and use mock user
-        if (DEV_MODE_SKIP_AUTH) {
-          console.log('⚠️ DEVELOPMENT MODE: Authentication bypassed');
-          console.log('✅ Using mock user:', DEV_MOCK_USER.email, DEV_MOCK_USER.userType);
-          return DEV_MOCK_USER;
-        }
-
-        // 🔒 PRODUCTION CODE: Normal authentication flow
-        const userData = await AsyncStorage.getItem('user');
-        if (userData) {
-          const parsedUser = JSON.parse(userData);
-          console.log('✅ User loaded from storage:', parsedUser.email, parsedUser.userType);
-          return parsedUser;
-        } else {
-          console.log('ℹ️ No user found in storage');
-          return null;
-        }
-      } catch (error) {
-        console.error('❌ Error loading user:', error);
-        throw new Error('Failed to load user data');
-      }
+    const listener = (state: typeof globalAuthState) => {
+      setUser(state.user);
+      setInitialized(state.initialized);
+      setLoading(state.loading);
     };
 
-    // Create or reuse the auth promise
-    if (!authPromise) {
-      authPromise = initializeAuth();
+    authListeners.add(listener);
+
+    // Initialize auth if not already done
+    if (!globalAuthState.initialized && !globalAuthState.loading) {
+      globalAuthState.loading = true;
+      notifyListeners();
+
+      initializeAuth()
+        .then((userData) => {
+          globalAuthState.user = userData;
+          globalAuthState.initialized = true;
+          globalAuthState.loading = false;
+          notifyListeners();
+          console.log('✅ Auth initialization completed');
+        })
+        .catch((error) => {
+          globalAuthState.initialized = true;
+          globalAuthState.loading = false;
+          notifyListeners();
+          setError(error.message);
+          console.error('❌ Auth initialization failed:', error);
+        });
     }
 
-    authPromise
-      .then((userData) => {
-        setUser(userData);
-        setInitialized(true);
-        console.log('✅ Auth initialization completed');
-      })
-      .catch((error) => {
-        setError(error.message);
-        setInitialized(true);
-      });
-  }, []); // Empty dependency array - only run once
+    return () => {
+      authListeners.delete(listener);
+    };
+  }, []);
 
   const clearError = () => {
     setError(null);
@@ -114,6 +130,9 @@ export const useAuthState = () => {
     try {
       setLoading(true);
       setError(null);
+      globalAuthState.loading = true;
+      notifyListeners();
+      
       console.log('🔄 Attempting login for:', email);
       
       // 🚨 DEV MODE: Always succeed with mock user
@@ -131,7 +150,9 @@ export const useAuthState = () => {
         };
         
         console.log('✅ Mock login successful:', mockUser.email, mockUser.userType);
-        setUser(mockUser);
+        globalAuthState.user = mockUser;
+        globalAuthState.loading = false;
+        notifyListeners();
         return true;
       }
 
@@ -155,11 +176,16 @@ export const useAuthState = () => {
       
       console.log('✅ Login successful, saving user:', mockUser.email, mockUser.userType);
       await AsyncStorage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      
+      globalAuthState.user = mockUser;
+      globalAuthState.loading = false;
+      notifyListeners();
       return true;
     } catch (error) {
       console.error('❌ Login error:', error);
       setError('Login failed. Please check your credentials.');
+      globalAuthState.loading = false;
+      notifyListeners();
       return false;
     } finally {
       setLoading(false);
@@ -170,6 +196,9 @@ export const useAuthState = () => {
     try {
       setLoading(true);
       setError(null);
+      globalAuthState.loading = true;
+      notifyListeners();
+      
       console.log('🔄 Attempting registration for:', userData.email);
       
       // 🚨 DEV MODE: Always succeed with mock user
@@ -186,7 +215,9 @@ export const useAuthState = () => {
         };
         
         console.log('✅ Mock registration successful:', newUser.email, newUser.userType);
-        setUser(newUser);
+        globalAuthState.user = newUser;
+        globalAuthState.loading = false;
+        notifyListeners();
         return true;
       }
 
@@ -207,11 +238,16 @@ export const useAuthState = () => {
       
       console.log('✅ Registration successful, saving user:', newUser.email, newUser.userType);
       await AsyncStorage.setItem('user', JSON.stringify(newUser));
-      setUser(newUser);
+      
+      globalAuthState.user = newUser;
+      globalAuthState.loading = false;
+      notifyListeners();
       return true;
     } catch (error) {
       console.error('❌ Registration error:', error);
       setError('Registration failed. Please try again.');
+      globalAuthState.loading = false;
+      notifyListeners();
       return false;
     } finally {
       setLoading(false);
@@ -221,17 +257,20 @@ export const useAuthState = () => {
   const logout = async (): Promise<void> => {
     try {
       setLoading(true);
+      globalAuthState.loading = true;
+      notifyListeners();
+      
       console.log('🔄 Logging out user...');
       
       // 🚨 DEV MODE: Quick logout without storage operations
       if (DEV_MODE_SKIP_AUTH) {
         console.log('⚠️ DEVELOPMENT MODE: Logout bypassed');
         await new Promise(resolve => setTimeout(resolve, 200));
-        setUser(null);
+        
+        globalAuthState.user = null;
+        globalAuthState.loading = false;
+        notifyListeners();
         setError(null);
-        // Reset auth state for next login
-        authInitialized = false;
-        authPromise = null;
         console.log('✅ Mock logout successful');
         return;
       }
@@ -241,28 +280,49 @@ export const useAuthState = () => {
       await new Promise(resolve => setTimeout(resolve, 200));
       
       await AsyncStorage.removeItem('user');
-      setUser(null);
+      
+      globalAuthState.user = null;
+      globalAuthState.loading = false;
+      notifyListeners();
       setError(null);
-      // Reset auth state for next login
-      authInitialized = false;
-      authPromise = null;
       console.log('✅ User logged out successfully');
     } catch (error) {
       console.error('❌ Logout error:', error);
       setError('Logout failed. Please try again.');
+      globalAuthState.loading = false;
+      notifyListeners();
     } finally {
       setLoading(false);
     }
   };
 
-  return {
-    user,
-    login,
-    register,
-    logout,
-    loading,
-    initialized,
-    error,
-    clearError
-  };
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        register,
+        logout,
+        loading,
+        initialized,
+        error,
+        clearError,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+// Legacy hook for backward compatibility
+export const useAuthState = () => {
+  return useAuth();
 };

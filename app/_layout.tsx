@@ -6,7 +6,7 @@ import { Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { useAuthState } from '@/hooks/useAuth';
+import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 import { View, StyleSheet, Alert, Dimensions, Text } from 'react-native';
 import Colors from '@/constants/Colors';
@@ -18,27 +18,10 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Prevent auto-hiding of splash screen
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
-  useFrameworkReady();
-  
+function AppNavigator() {
   const router = useRouter();
-  const { user, initialized, loading, error, clearError } = useAuthState();
+  const { user, initialized, loading, error, clearError } = useAuth();
   const [navigationReady, setNavigationReady] = useState(false);
-
-  const [fontsLoaded, fontError] = useFonts({
-    'Cairo-Regular': Cairo_400Regular,
-    'Cairo-Bold': Cairo_700Bold,
-    'Inter-Regular': Inter_400Regular,
-    'Inter-SemiBold': Inter_600SemiBold,
-  });
-
-  // Hide splash screen when everything is ready
-  useEffect(() => {
-    if ((fontsLoaded || fontError) && initialized) {
-      console.log('✅ Hiding splash screen - Fonts loaded:', fontsLoaded, 'Auth initialized:', initialized);
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded, fontError, initialized]);
 
   // Handle authentication errors
   useEffect(() => {
@@ -55,7 +38,7 @@ export default function RootLayout() {
 
   // Navigation logic - production mode
   useEffect(() => {
-    if (initialized && !loading && (fontsLoaded || fontError) && !navigationReady) {
+    if (initialized && !loading && !navigationReady) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
       
       // Delay navigation to ensure UI is ready
@@ -73,20 +56,7 @@ export default function RootLayout() {
 
       return () => clearTimeout(navigationTimeout);
     }
-  }, [user, initialized, loading, router, fontsLoaded, fontError, navigationReady]);
-
-  // Show loading while fonts are loading
-  if (!fontsLoaded && !fontError) {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <View style={styles.loadingContent}>
-          <Text style={styles.appTitle}>WorkConnect</Text>
-          <Text style={styles.appSubtitle}>Lebanon</Text>
-          <LoadingSpinner size="large" showText text="Loading fonts..." />
-        </View>
-      </View>
-    );
-  }
+  }, [user, initialized, loading, router, navigationReady]);
 
   // Show loading while auth is initializing
   if (!initialized || loading) {
@@ -115,16 +85,54 @@ export default function RootLayout() {
   }
 
   return (
-    <ErrorBoundary>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="auth" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="typewriter-demo" />
+      <Stack.Screen name="+not-found" />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  useFrameworkReady();
+  
+  const [fontsLoaded, fontError] = useFonts({
+    'Cairo-Regular': Cairo_400Regular,
+    'Cairo-Bold': Cairo_700Bold,
+    'Inter-Regular': Inter_400Regular,
+    'Inter-SemiBold': Inter_600SemiBold,
+  });
+
+  // Hide splash screen when everything is ready
+  useEffect(() => {
+    if (fontsLoaded || fontError) {
+      console.log('✅ Hiding splash screen - Fonts loaded:', fontsLoaded);
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Show loading while fonts are loading
+  if (!fontsLoaded && !fontError) {
+    return (
       <View style={styles.fullScreenContainer}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="typewriter-demo" />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
+        <View style={styles.loadingContent}>
+          <Text style={styles.appTitle}>WorkConnect</Text>
+          <Text style={styles.appSubtitle}>Lebanon</Text>
+          <LoadingSpinner size="large" showText text="Loading fonts..." />
+        </View>
       </View>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <View style={styles.fullScreenContainer}>
+          <AppNavigator />
+          <StatusBar style="auto" />
+        </View>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

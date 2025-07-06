@@ -5,7 +5,7 @@ import { MapPin, Bell, Plus, TrendingUp, Clock, Star, Briefcase, Users, DollarSi
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import JobCard from '@/components/JobCard';
-import { useAuthState } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -104,7 +104,7 @@ const AnimatedView = Animated.View;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, loading, initialized } = useAuthState();
+  const { user, loading, initialized } = useAuth();
   const [nearbyJobs, setNearbyJobs] = useState<Job[]>([]);
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
@@ -130,6 +130,11 @@ export default function HomeScreen() {
     [responsiveDimensions, dimensions.width, dimensions.height, insets.top, insets.bottom]
   );
 
+  // Debug logging
+  useEffect(() => {
+    console.log('HomeScreen - User:', user?.email, 'Loading:', loading, 'Initialized:', initialized);
+  }, [user, loading, initialized]);
+
   // FIX: Stable dimensions listener
   useEffect(() => {
     const subscription = Dimensions.addEventListener('change', ({ window }) => {
@@ -147,8 +152,6 @@ export default function HomeScreen() {
 
   // FIX: Stable animation effect with proper dependencies
   useEffect(() => {
-    console.log('HomeScreen - User:', user?.email, 'Loading:', loading, 'Initialized:', initialized);
-    
     if (initialized && user) {
       // Reset animations first
       fadeAnim.setValue(0);

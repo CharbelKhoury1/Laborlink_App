@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Switch, Dimensions } from 'react-native';
-import { Settings, Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
+import { Settings, CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
 import { SKILL_CATEGORIES } from '@/constants/SkillCategories';

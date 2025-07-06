@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Switch, Dimensions } from 'react-native';
-import { Settings, CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, LogOut, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
+import { Settings, Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
 import { SKILL_CATEGORIES } from '@/constants/SkillCategories';
@@ -17,18 +17,19 @@ const isTablet = screenWidth >= 768;
 // Mock profile data
 const mockProfile = {
   id: 'profile-123',
-  name: 'Guest User',
-  email: 'guest@workconnect.com',
+  name: 'John Doe',
+  email: 'john.doe@workconnect.com',
   phone: '+961 70 123 456',
   avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200&h=200',
-  verified: false,
-  rating: 4.5,
-  reviewCount: 12,
-  jobsCompleted: 8,
-  hoursWorked: 96,
+  verified: true,
+  rating: 4.8,
+  reviewCount: 47,
+  jobsCompleted: 23,
+  hoursWorked: 186,
   skills: [
-    { id: '1', name: 'Plumbing', category: SKILL_CATEGORIES[1], experience: 'intermediate' as const, verified: false },
-    { id: '2', name: 'Electrical', category: SKILL_CATEGORIES[2], experience: 'beginner' as const, verified: false },
+    { id: '1', name: 'Plumbing', category: SKILL_CATEGORIES[1], experience: 'expert' as const, verified: true },
+    { id: '2', name: 'Electrical', category: SKILL_CATEGORIES[2], experience: 'intermediate' as const, verified: true },
+    { id: '3', name: 'Carpentry', category: SKILL_CATEGORIES[6], experience: 'intermediate' as const, verified: false },
   ]
 };
 
@@ -106,7 +107,7 @@ export default function ProfileScreen() {
             {mockProfile.verified && (
               <View style={styles.verifiedBadge}>
                 <Shield size={isTablet ? 18 : 14} color={Colors.success} />
-                <Text style={styles.verifiedText}>Verified</Text>
+                <Text style={styles.verifiedText}>Verified Professional</Text>
               </View>
             )}
           </View>
@@ -126,6 +127,11 @@ export default function ProfileScreen() {
             <Clock size={isTablet ? 28 : 20} color={Colors.secondary} />
             <Text style={styles.statValue}>{mockProfile.hoursWorked}</Text>
             <Text style={styles.statLabel}>Hours Worked</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Star size={isTablet ? 28 : 20} color={Colors.warning} />
+            <Text style={styles.statValue}>{mockProfile.rating}</Text>
+            <Text style={styles.statLabel}>Average Rating</Text>
           </View>
         </View>
 
@@ -180,13 +186,17 @@ export default function ProfileScreen() {
             icon={Shield}
             title="Privacy & Security"
           />
+          <SettingItem
+            icon={Settings}
+            title="App Settings"
+          />
         </ProfileSection>
 
-        {/* Guest Mode Notice */}
-        <View style={styles.guestNotice}>
-          <Text style={styles.guestNoticeTitle}>Guest Mode</Text>
-          <Text style={styles.guestNoticeText}>
-            You're browsing as a guest. Create an account to save your preferences and access all features.
+        {/* Professional Info */}
+        <View style={styles.professionalNotice}>
+          <Text style={styles.professionalNoticeTitle}>Professional Account</Text>
+          <Text style={styles.professionalNoticeText}>
+            You're using WorkConnect as a verified professional. Your profile is visible to clients looking for skilled workers in Lebanon.
           </Text>
         </View>
       </SafeAreaView>
@@ -341,22 +351,22 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  guestNotice: {
+  professionalNotice: {
     backgroundColor: Colors.backgroundSecondary,
     marginHorizontal: isTablet ? 32 : 20,
     marginBottom: isTablet ? 40 : 32,
     padding: isTablet ? 24 : 20,
     borderRadius: isTablet ? 16 : 12,
     borderLeftWidth: 4,
-    borderLeftColor: Colors.primary,
+    borderLeftColor: Colors.success,
   },
-  guestNoticeTitle: {
+  professionalNoticeTitle: {
     fontSize: isTablet ? 18 : 16,
     fontWeight: '600',
     color: Colors.text,
     marginBottom: 8,
   },
-  guestNoticeText: {
+  professionalNoticeText: {
     fontSize: isTablet ? 16 : 14,
     color: Colors.textSecondary,
     lineHeight: isTablet ? 24 : 20,

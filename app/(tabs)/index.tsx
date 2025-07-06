@@ -94,6 +94,25 @@ const mockJobs: Job[] = [
     urgency: 'medium',
     status: 'open',
     createdAt: new Date(),
+  },
+  {
+    id: '3',
+    clientId: 'client3',
+    title: 'Electrical Wiring Installation',
+    description: 'Install new electrical outlets and rewire living room area. Must be licensed electrician.',
+    location: {
+      latitude: 33.8869,
+      longitude: 35.5131,
+      address: 'Verdun',
+      city: 'Beirut',
+      region: 'Beirut'
+    },
+    requiredSkills: ['Electrical', 'Wiring', 'Installation'],
+    duration: 6,
+    budget: { min: 200, max: 350, currency: 'USD' },
+    urgency: 'low',
+    status: 'open',
+    createdAt: new Date(),
   }
 ];
 
@@ -143,7 +162,7 @@ export default function HomeScreen() {
     return () => subscription?.remove();
   }, []); // Empty dependency array is correct here
 
-  // Start animations immediately since no auth is required
+  // Start animations immediately
   useEffect(() => {
     console.log('🔄 Starting home screen animations');
     

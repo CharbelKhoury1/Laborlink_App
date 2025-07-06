@@ -6,9 +6,8 @@ import { Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import { View, StyleSheet, Alert, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import Colors from '@/constants/Colors';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -20,56 +19,23 @@ SplashScreen.preventAutoHideAsync();
 
 function AppNavigator() {
   const router = useRouter();
-  const { user, initialized, loading, error, clearError } = useAuth();
   const [navigationReady, setNavigationReady] = useState(false);
 
-  // Handle authentication errors
+  // Direct navigation to main app - no authentication required
   useEffect(() => {
-    if (error) {
-      Alert.alert(
-        'Authentication Error',
-        error,
-        [
-          { text: 'OK', onPress: clearError }
-        ]
-      );
-    }
-  }, [error, clearError]);
-
-  // Navigation logic - production mode
-  useEffect(() => {
-    if (initialized && !loading && !navigationReady) {
-      console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
+    if (!navigationReady) {
+      console.log('🔄 Direct navigation to main app');
       
       // Delay navigation to ensure UI is ready
       const navigationTimeout = setTimeout(() => {
         setNavigationReady(true);
-        
-        if (user) {
-          console.log('✅ Navigating to tabs with user:', user.userType);
-          router.replace('/(tabs)');
-        } else {
-          console.log('ℹ️ Navigating to auth - no user found');
-          router.replace('/auth');
-        }
+        console.log('✅ Navigating directly to tabs');
+        router.replace('/(tabs)');
       }, 300);
 
       return () => clearTimeout(navigationTimeout);
     }
-  }, [user, initialized, loading, router, navigationReady]);
-
-  // Show loading while auth is initializing
-  if (!initialized || loading) {
-    return (
-      <View style={styles.fullScreenContainer}>
-        <View style={styles.loadingContent}>
-          <Text style={styles.appTitle}>WorkConnect</Text>
-          <Text style={styles.appSubtitle}>Lebanon</Text>
-          <LoadingSpinner size="large" showText text="Initializing..." />
-        </View>
-      </View>
-    );
-  }
+  }, [router, navigationReady]);
 
   // Show loading while navigation is preparing
   if (!navigationReady) {
@@ -78,7 +44,7 @@ function AppNavigator() {
         <View style={styles.loadingContent}>
           <Text style={styles.appTitle}>WorkConnect</Text>
           <Text style={styles.appSubtitle}>Lebanon</Text>
-          <LoadingSpinner size="large" showText text="Preparing..." />
+          <LoadingSpinner size="large" showText text="Loading..." />
         </View>
       </View>
     );
@@ -86,7 +52,6 @@ function AppNavigator() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="auth" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="typewriter-demo" />
       <Stack.Screen name="+not-found" />
@@ -127,12 +92,10 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <View style={styles.fullScreenContainer}>
-          <AppNavigator />
-          <StatusBar style="auto" />
-        </View>
-      </AuthProvider>
+      <View style={styles.fullScreenContainer}>
+        <AppNavigator />
+        <StatusBar style="auto" />
+      </View>
     </ErrorBoundary>
   );
 }

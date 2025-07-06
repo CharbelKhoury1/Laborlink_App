@@ -3,7 +3,6 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Ima
 import { Settings, CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, LogOut, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
-import { useAuthState } from '@/hooks/useAuth';
 import { SKILL_CATEGORIES } from '@/constants/SkillCategories';
 import i18n from '@/utils/i18n';
 
@@ -15,15 +14,25 @@ const isMediumDevice = screenWidth >= 375 && screenWidth < 414;
 const isLargeDevice = screenWidth >= 414 && screenWidth < 768;
 const isTablet = screenWidth >= 768;
 
-// Mock worker profile data
-const mockWorkerSkills = [
-  { id: '1', name: 'Plumbing', category: SKILL_CATEGORIES[1], experience: 'expert' as const, verified: true },
-  { id: '2', name: 'Pipe Repair', category: SKILL_CATEGORIES[1], experience: 'expert' as const, verified: true },
-  { id: '3', name: 'Electrical', category: SKILL_CATEGORIES[2], experience: 'intermediate' as const, verified: false },
-];
+// Mock profile data
+const mockProfile = {
+  id: 'profile-123',
+  name: 'Guest User',
+  email: 'guest@workconnect.com',
+  phone: '+961 70 123 456',
+  avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200&h=200',
+  verified: false,
+  rating: 4.5,
+  reviewCount: 12,
+  jobsCompleted: 8,
+  hoursWorked: 96,
+  skills: [
+    { id: '1', name: 'Plumbing', category: SKILL_CATEGORIES[1], experience: 'intermediate' as const, verified: false },
+    { id: '2', name: 'Electrical', category: SKILL_CATEGORIES[2], experience: 'beginner' as const, verified: false },
+  ]
+};
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuthState();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
@@ -34,10 +43,6 @@ export default function ProfileScreen() {
 
     return () => subscription?.remove();
   }, []);
-
-  const handleLogout = async () => {
-    await logout();
-  };
 
   const styles = createStyles(dimensions);
 
@@ -78,27 +83,27 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderWorkerProfile = () => (
+  return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <SafeAreaView>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Image 
-            source={{ uri: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200&h=200' }}
+            source={{ uri: mockProfile.avatar }}
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.name}</Text>
+            <Text style={styles.profileName}>{mockProfile.name}</Text>
             <View style={styles.ratingContainer}>
               <Star size={isTablet ? 20 : 16} color={Colors.secondary} fill={Colors.secondary} />
-              <Text style={styles.rating}>4.8</Text>
-              <Text style={styles.reviewCount}>(24 reviews)</Text>
+              <Text style={styles.rating}>{mockProfile.rating}</Text>
+              <Text style={styles.reviewCount}>({mockProfile.reviewCount} reviews)</Text>
             </View>
             <View style={styles.locationContainer}>
               <MapPin size={isTablet ? 18 : 14} color={Colors.textSecondary} />
               <Text style={styles.location}>Beirut, Lebanon</Text>
             </View>
-            {user?.verified && (
+            {mockProfile.verified && (
               <View style={styles.verifiedBadge}>
                 <Shield size={isTablet ? 18 : 14} color={Colors.success} />
                 <Text style={styles.verifiedText}>Verified</Text>
@@ -110,16 +115,16 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Worker Stats */}
+        {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Briefcase size={isTablet ? 28 : 20} color={Colors.primary} />
-            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statValue}>{mockProfile.jobsCompleted}</Text>
             <Text style={styles.statLabel}>Jobs Completed</Text>
           </View>
           <View style={styles.statItem}>
             <Clock size={isTablet ? 28 : 20} color={Colors.secondary} />
-            <Text style={styles.statValue}>145</Text>
+            <Text style={styles.statValue}>{mockProfile.hoursWorked}</Text>
             <Text style={styles.statLabel}>Hours Worked</Text>
           </View>
         </View>
@@ -127,7 +132,7 @@ export default function ProfileScreen() {
         {/* Skills */}
         <ProfileSection title={i18n.t('skills')}>
           <View style={styles.skillsContainer}>
-            {mockWorkerSkills.map((skill) => (
+            {mockProfile.skills.map((skill) => (
               <SkillChip key={skill.id} skill={skill} readonly />
             ))}
           </View>
@@ -138,12 +143,12 @@ export default function ProfileScreen() {
           <SettingItem
             icon={Phone}
             title="Phone"
-            subtitle={user?.phone}
+            subtitle={mockProfile.phone}
           />
           <SettingItem
             icon={Mail}
             title="Email"
-            subtitle={user?.email}
+            subtitle={mockProfile.email}
           />
         </ProfileSection>
 
@@ -177,132 +182,22 @@ export default function ProfileScreen() {
           />
         </ProfileSection>
 
-        {/* Logout */}
-        <View style={styles.logoutContainer}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={isTablet ? 24 : 20} color={Colors.error} />
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+        {/* Guest Mode Notice */}
+        <View style={styles.guestNotice}>
+          <Text style={styles.guestNoticeTitle}>Guest Mode</Text>
+          <Text style={styles.guestNoticeText}>
+            You're browsing as a guest. Create an account to save your preferences and access all features.
+          </Text>
         </View>
       </SafeAreaView>
     </ScrollView>
   );
-
-  const renderClientProfile = () => (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <SafeAreaView>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <Image 
-            source={{ uri: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=200&h=200' }}
-            style={styles.profileImage}
-          />
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{user?.name}</Text>
-            <View style={styles.ratingContainer}>
-              <Star size={isTablet ? 20 : 16} color={Colors.secondary} fill={Colors.secondary} />
-              <Text style={styles.rating}>4.6</Text>
-              <Text style={styles.reviewCount}>(8 reviews)</Text>
-            </View>
-            <View style={styles.locationContainer}>
-              <MapPin size={isTablet ? 18 : 14} color={Colors.textSecondary} />
-              <Text style={styles.location}>Beirut, Lebanon</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.editButton}>
-            <Edit size={isTablet ? 22 : 18} color={Colors.primary} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Client Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Briefcase size={isTablet ? 28 : 20} color={Colors.primary} />
-            <Text style={styles.statValue}>5</Text>
-            <Text style={styles.statLabel}>Jobs Posted</Text>
-          </View>
-          <View style={styles.statItem}>
-            <Star size={isTablet ? 28 : 20} color={Colors.secondary} />
-            <Text style={styles.statValue}>4.6</Text>
-            <Text style={styles.statLabel}>Average Rating</Text>
-          </View>
-        </View>
-
-        {/* Contact Info */}
-        <ProfileSection title="Contact Information">
-          <SettingItem
-            icon={Phone}
-            title="Phone"
-            subtitle={user?.phone}
-          />
-          <SettingItem
-            icon={Mail}
-            title="Email"
-            subtitle={user?.email}
-          />
-        </ProfileSection>
-
-        {/* Settings */}
-        <ProfileSection title="Settings">
-          <SettingItem
-            icon={Bell}
-            title="Notifications"
-            rightElement={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: Colors.borderLight, true: Colors.primaryLight }}
-                thumbColor={notificationsEnabled ? Colors.primary : Colors.textLight}
-              />
-            }
-            showChevron={false}
-          />
-          <SettingItem
-            icon={Globe}
-            title="Language"
-            subtitle="English"
-          />
-          <SettingItem
-            icon={CreditCard}
-            title="Payment Methods"
-          />
-          <SettingItem
-            icon={Shield}
-            title="Privacy & Security"
-          />
-        </ProfileSection>
-
-        {/* Logout */}
-        <View style={styles.logoutContainer}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <LogOut size={isTablet ? 24 : 20} color={Colors.error} />
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </ScrollView>
-  );
-
-  if (!user) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
-
-  return user.userType === 'worker' ? renderWorkerProfile() : renderClientProfile();
 }
 
 const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   profileHeader: {
     flexDirection: 'row',
@@ -446,20 +341,24 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  logoutContainer: {
-    backgroundColor: Colors.white,
+  guestNotice: {
+    backgroundColor: Colors.backgroundSecondary,
+    marginHorizontal: isTablet ? 32 : 20,
     marginBottom: isTablet ? 40 : 32,
+    padding: isTablet ? 24 : 20,
+    borderRadius: isTablet ? 16 : 12,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
   },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: isTablet ? 20 : 16,
-    gap: isTablet ? 12 : 8,
-  },
-  logoutText: {
+  guestNoticeTitle: {
     fontSize: isTablet ? 18 : 16,
-    fontWeight: '500',
-    color: Colors.error,
+    fontWeight: '600',
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  guestNoticeText: {
+    fontSize: isTablet ? 16 : 14,
+    color: Colors.textSecondary,
+    lineHeight: isTablet ? 24 : 20,
   },
 });

@@ -4,12 +4,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, MapPin, Clock, DollarSign, Star, Phone, MessageCircle, Calendar, Camera, Shield, User } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
-import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
-
-// 🔒 PRODUCTION MODE: Normal user type checks
-const DEV_MODE_SKIP_USER_TYPE_CHECKS = false;
 
 // Mock job data - in real app, fetch from API
 const mockJobDetails: Job = {
@@ -51,7 +47,6 @@ const mockClient = {
 export default function JobDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { user } = useAuthState();
   const [job, setJob] = useState<Job | null>(null);
   const [applied, setApplied] = useState(false);
 
@@ -61,26 +56,20 @@ export default function JobDetailsScreen() {
   }, [id]);
 
   const handleApply = () => {
-    // 🚨 DEV MODE: Allow all users to apply regardless of type
-    if (DEV_MODE_SKIP_USER_TYPE_CHECKS || user?.userType === 'worker') {
-      Alert.alert(
-        'Apply for Job',
-        'Are you sure you want to apply for this job?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Apply', 
-            onPress: () => {
-              setApplied(true);
-              Alert.alert('Success', 'Your application has been submitted!');
-            }
+    Alert.alert(
+      'Apply for Job',
+      'Are you sure you want to apply for this job?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Apply', 
+          onPress: () => {
+            setApplied(true);
+            Alert.alert('Success', 'Your application has been submitted!');
           }
-        ]
-      );
-    } else {
-      // 🔒 PRODUCTION CODE: Normal user type check
-      Alert.alert('Error', 'Only workers can apply for jobs');
-    }
+        }
+      ]
+    );
   };
 
   const handleContact = () => {
@@ -104,9 +93,6 @@ export default function JobDetailsScreen() {
     }
   };
 
-  // 🚨 DEV MODE: Show apply button for all users
-  const shouldShowApplyButton = DEV_MODE_SKIP_USER_TYPE_CHECKS || user?.userType === 'worker';
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -125,13 +111,6 @@ export default function JobDetailsScreen() {
               <Image key={index} source={{ uri: photo }} style={styles.jobPhoto} />
             ))}
           </ScrollView>
-        )}
-
-        {/* Development Mode Indicator */}
-        {DEV_MODE_SKIP_USER_TYPE_CHECKS && (
-          <View style={styles.devModeIndicator}>
-            <Text style={styles.devModeText}>🚨 Development Mode: User type checks disabled</Text>
-          </View>
         )}
 
         {/* Job Header */}
@@ -224,20 +203,18 @@ export default function JobDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar - Modified for production mode */}
-      {shouldShowApplyButton && (
-        <View style={styles.bottomBar}>
-          <TouchableOpacity 
-            style={[styles.applyButton, applied && styles.appliedButton]}
-            onPress={handleApply}
-            disabled={applied}
-          >
-            <Text style={[styles.applyButtonText, applied && styles.appliedButtonText]}>
-              {applied ? 'Applied' : 'Apply for Job'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {/* Bottom Action Bar */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity 
+          style={[styles.applyButton, applied && styles.appliedButton]}
+          onPress={handleApply}
+          disabled={applied}
+        >
+          <Text style={[styles.applyButtonText, applied && styles.appliedButtonText]}>
+            {applied ? 'Applied' : 'Apply for Job'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -282,20 +259,6 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 12,
     marginRight: 12,
-  },
-  devModeIndicator: {
-    backgroundColor: Colors.warning,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderRadius: 8,
-  },
-  devModeText: {
-    fontSize: 14,
-    color: Colors.white,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
   jobHeader: {
     paddingHorizontal: 20,

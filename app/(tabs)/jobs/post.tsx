@@ -3,11 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Scro
 import { useRouter } from 'expo-router';
 import { ArrowLeft, MapPin, Camera, X, Plus } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
-import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
-
-// 🔒 PRODUCTION MODE: Normal user type checks
-const DEV_MODE_SKIP_USER_TYPE_CHECKS = false;
 
 const URGENCY_OPTIONS = [
   { value: 'low', label: 'Low Priority', color: Colors.success },
@@ -22,7 +18,6 @@ const SKILL_SUGGESTIONS = [
 
 export default function PostJobScreen() {
   const router = useRouter();
-  const { user } = useAuthState();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -88,18 +83,6 @@ export default function PostJobScreen() {
     }, 2000);
   };
 
-  // 🚨 DEV MODE: Allow all users to post jobs
-  if (!DEV_MODE_SKIP_USER_TYPE_CHECKS && user?.userType !== 'client') {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Only clients can post jobs</Text>
-        {DEV_MODE_SKIP_USER_TYPE_CHECKS && (
-          <Text style={styles.devModeText}>🚨 Development Mode: User type checks disabled</Text>
-        )}
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -109,13 +92,6 @@ export default function PostJobScreen() {
         <Text style={styles.headerTitle}>Post a Job</Text>
         <View style={{ width: 24 }} />
       </View>
-
-      {/* Development Mode Indicator */}
-      {DEV_MODE_SKIP_USER_TYPE_CHECKS && (
-        <View style={styles.devModeIndicator}>
-          <Text style={styles.devModeText}>🚨 Development Mode: User type checks disabled</Text>
-        </View>
-      )}
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Job Title */}
@@ -289,24 +265,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorText: {
-    fontSize: 16,
-    color: Colors.error,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  devModeText: {
-    fontSize: 14,
-    color: Colors.warning,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -324,14 +282,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: Colors.text,
-  },
-  devModeIndicator: {
-    backgroundColor: Colors.warning,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 8,
   },
   content: {
     flex: 1,

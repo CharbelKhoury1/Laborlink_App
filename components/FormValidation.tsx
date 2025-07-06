@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { CheckCircle, AlertCircle, Info } from 'lucide-react-native';
+import { CircleCheck as CheckCircle, CircleAlert as AlertCircle, Info } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 
 interface ValidationRule {

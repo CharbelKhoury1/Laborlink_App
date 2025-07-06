@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Switch, Dimensions, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { 
-  Edit3, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, 
-  ChevronRight, Briefcase, Clock, Award, Users, TrendingUp, Settings,
-  Camera, Eye, EyeOff, Lock, Download, Share2
-} from 'lucide-react-native';
+import { CreditCard as Edit3, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, ChevronRight, Briefcase, Clock, Award, Users, TrendingUp, Settings, Camera, Eye, EyeOff, Lock, Download, Share2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';

@@ -5,10 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  User, Mail, Lock, Eye, EyeOff, UserPlus, LogIn, 
-  Shield, CheckCircle, AlertCircle, Briefcase, Users 
-} from 'lucide-react-native';
+import { User, Mail, Lock, Eye, EyeOff, UserPlus, LogIn, Shield, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Briefcase, Users } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import { useAuthState } from '@/hooks/useAuth';
 import FormValidation, { createValidationRules } from '@/components/FormValidation';

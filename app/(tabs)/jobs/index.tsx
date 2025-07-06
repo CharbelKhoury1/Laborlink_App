@@ -5,6 +5,7 @@ import { Search, Filter, MapPin, Plus, SlidersHorizontal } from 'lucide-react-na
 import Colors from '@/constants/Colors';
 import JobCard from '@/components/JobCard';
 import FilterModal from '@/components/FilterModal';
+import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 
@@ -79,6 +80,7 @@ const mockJobs: Job[] = [
 
 export default function JobsScreen() {
   const router = useRouter();
+  const { user } = useAuthState();
   const [searchQuery, setSearchQuery] = useState('');
   const [jobs, setJobs] = useState<Job[]>(mockJobs);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(mockJobs);
@@ -187,17 +189,14 @@ export default function JobsScreen() {
 
   const styles = createStyles(dimensions);
 
-  return (
+  const renderWorkerJobs = () => (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <SafeAreaView>
         <View style={styles.header}>
-          <Text style={styles.title}>Browse Jobs</Text>
-          <TouchableOpacity 
-            style={styles.postJobButton}
-            onPress={() => router.push('/(tabs)/jobs/post') as any}
-          >
-            <Plus size={isTablet ? 24 : 20} color={Colors.white} />
-            <Text style={styles.postJobButtonText}>Post Job</Text>
+          <Text style={styles.title}>{i18n.t('findJobs')}</Text>
+          <TouchableOpacity style={styles.locationButton}>
+            <MapPin size={isTablet ? 20 : 16} color={Colors.primary} />
+            <Text style={styles.locationText}>Beirut</Text>
           </TouchableOpacity>
         </View>
 
@@ -255,12 +254,66 @@ export default function JobsScreen() {
       />
     </ScrollView>
   );
+
+  const renderClientJobs = () => (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <SafeAreaView>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Jobs</Text>
+          <TouchableOpacity 
+            style={styles.postJobButton}
+            onPress={() => router.push('/(tabs)/jobs/post') as any}
+          >
+            <Plus size={isTablet ? 24 : 20} color={Colors.white} />
+            <Text style={styles.postJobButtonText}>Post Job</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity style={[styles.tab, styles.activeTab]}>
+            <Text style={[styles.tabText, styles.activeTabText]}>Active</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tab}>
+            <Text style={styles.tabText}>Completed</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.tab}>
+            <Text style={styles.tabText}>Draft</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.jobsList}>
+          {jobs.map((job) => (
+            <JobCard
+              key={job.id}
+              job={job}
+              onPress={() => handleJobPress(job.id)}
+            />
+          ))}
+        </View>
+      </SafeAreaView>
+    </ScrollView>
+  );
+
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  return user.userType === 'worker' ? renderWorkerJobs() : renderClientJobs();
 }
 
 const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -274,6 +327,20 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     fontSize: isTablet ? 28 : isLargeDevice ? 24 : isSmallDevice ? 20 : 22,
     fontWeight: 'bold',
     color: Colors.text,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: isTablet ? 16 : 12,
+    paddingVertical: isTablet ? 10 : 6,
+    borderRadius: isTablet ? 20 : 16,
+    gap: 4,
+  },
+  locationText: {
+    fontSize: isTablet ? 14 : 12,
+    color: Colors.primary,
+    fontWeight: '500',
   },
   postJobButton: {
     flexDirection: 'row',
@@ -341,6 +408,29 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     fontSize: isTablet ? 16 : 14,
     color: Colors.primary,
     fontWeight: '500',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: isTablet ? 32 : 20,
+    marginBottom: isTablet ? 28 : 20,
+    gap: isTablet ? 12 : 8,
+  },
+  tab: {
+    paddingHorizontal: isTablet ? 20 : 16,
+    paddingVertical: isTablet ? 12 : 8,
+    borderRadius: isTablet ? 24 : 20,
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  activeTab: {
+    backgroundColor: Colors.primary,
+  },
+  tabText: {
+    fontSize: isTablet ? 16 : 14,
+    color: Colors.textSecondary,
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: Colors.white,
   },
   jobsList: {
     paddingHorizontal: isTablet ? 32 : 20,

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Ima
 import { useRouter } from 'expo-router';
 import { MessageCircle, Phone, Video } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
+import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -59,6 +60,7 @@ const mockConversations = [
 
 export default function MessagesScreen() {
   const router = useRouter();
+  const { user } = useAuthState();
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
   useEffect(() => {
@@ -117,6 +119,14 @@ export default function MessagesScreen() {
     </TouchableOpacity>
   );
 
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -149,6 +159,11 @@ const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

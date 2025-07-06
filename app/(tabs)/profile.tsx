@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Switch, Dimensions, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, ChevronRight, Briefcase, Clock, Award, Users, TrendingUp, Settings, Camera, Eye, EyeOff, Lock, Download, Share2 } from 'lucide-react-native';
+import { CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, LogOut, ChevronRight, Briefcase, Clock, Award, Users, TrendingUp, Settings, Camera, Eye, EyeOff, Lock, Download, Share2 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
+import { useAuthState } from '@/hooks/useAuth';
 import { SKILL_CATEGORIES } from '@/constants/SkillCategories';
 import i18n from '@/utils/i18n';
 
@@ -65,6 +66,7 @@ const mockProfile = {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, logout } = useAuthState();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [dimensions, setDimensions] = useState(Dimensions.get('window'));
   const [profileVisibility, setProfileVisibility] = useState(true);
@@ -76,6 +78,10 @@ export default function ProfileScreen() {
 
     return () => subscription?.remove();
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const styles = createStyles(dimensions);
 
@@ -171,7 +177,7 @@ export default function ProfileScreen() {
     </View>
   );
 
-  return (
+  const renderWorkerProfile = () => (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <SafeAreaView>
         {/* Cover Image & Profile Header */}
@@ -198,7 +204,7 @@ export default function ProfileScreen() {
             
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>
-                {mockProfile.firstName} {mockProfile.lastName}
+                {user?.name || `${mockProfile.firstName} ${mockProfile.lastName}`}
               </Text>
               <Text style={styles.professionalTitle}>
                 {mockProfile.professionalTitle}
@@ -231,11 +237,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-
-        {/* Professional Summary */}
-        <ProfileSection title="Professional Summary" action={handleEditProfile}>
-          <Text style={styles.summaryText}>{mockProfile.professionalSummary}</Text>
-        </ProfileSection>
 
         {/* Performance Stats */}
         <ProfileSection title="Performance Metrics">
@@ -275,79 +276,27 @@ export default function ProfileScreen() {
               <SkillChip key={skill.id} skill={skill} readonly />
             ))}
           </View>
-          
-          <View style={styles.certificationsContainer}>
-            <Text style={styles.certificationsTitle}>Certifications</Text>
-            {mockProfile.certifications.map((cert, index) => (
-              <View key={index} style={styles.certificationItem}>
-                <Award size={16} color={Colors.success} />
-                <View style={styles.certificationInfo}>
-                  <Text style={styles.certificationName}>{cert.name}</Text>
-                  <Text style={styles.certificationIssuer}>{cert.issuer} • {cert.year}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
         </ProfileSection>
 
         {/* Contact Information */}
         <ProfileSection title="Contact Information" action={handlePrivacySettings}>
-          <View style={styles.contactGrid}>
-            <View style={styles.contactItem}>
-              <Mail size={isTablet ? 20 : 18} color={Colors.primary} />
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Email</Text>
-                <Text style={styles.contactValue}>{mockProfile.email}</Text>
-              </View>
-              <View style={styles.privacyIndicator}>
-                {mockProfile.privacy.showEmail ? (
-                  <Eye size={14} color={Colors.success} />
-                ) : (
-                  <EyeOff size={14} color={Colors.textSecondary} />
-                )}
-              </View>
-            </View>
-
-            <View style={styles.contactItem}>
-              <Phone size={isTablet ? 20 : 18} color={Colors.primary} />
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Phone</Text>
-                <Text style={styles.contactValue}>{mockProfile.phone}</Text>
-              </View>
-              <View style={styles.privacyIndicator}>
-                {mockProfile.privacy.showPhone ? (
-                  <Eye size={14} color={Colors.success} />
-                ) : (
-                  <EyeOff size={14} color={Colors.textSecondary} />
-                )}
-              </View>
-            </View>
-
-            <View style={styles.contactItem}>
-              <MapPin size={isTablet ? 20 : 18} color={Colors.primary} />
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactLabel}>Business Address</Text>
-                <Text style={styles.contactValue}>
-                  {mockProfile.businessAddress.street}, {mockProfile.businessAddress.city}
-                </Text>
-              </View>
-              <View style={styles.privacyIndicator}>
-                {mockProfile.privacy.showAddress ? (
-                  <Eye size={14} color={Colors.success} />
-                ) : (
-                  <EyeOff size={14} color={Colors.textSecondary} />
-                )}
-              </View>
-            </View>
-          </View>
+          <SettingItem
+            icon={Phone}
+            title="Phone"
+            subtitle={user?.phone}
+          />
+          <SettingItem
+            icon={Mail}
+            title="Email"
+            subtitle={user?.email}
+          />
         </ProfileSection>
 
-        {/* Account Settings */}
-        <ProfileSection title="Account Settings">
+        {/* Settings */}
+        <ProfileSection title="Settings">
           <SettingItem
             icon={Bell}
             title="Notifications"
-            subtitle="Manage your notification preferences"
             rightElement={
               <Switch
                 value={notificationsEnabled}
@@ -358,79 +307,147 @@ export default function ProfileScreen() {
             }
             showChevron={false}
           />
-          
-          <SettingItem
-            icon={Eye}
-            title="Profile Visibility"
-            subtitle={profileVisibility ? "Visible to clients" : "Hidden from search"}
-            rightElement={
-              <Switch
-                value={profileVisibility}
-                onValueChange={setProfileVisibility}
-                trackColor={{ false: Colors.borderLight, true: Colors.primaryLight }}
-                thumbColor={profileVisibility ? Colors.primary : Colors.textLight}
-              />
-            }
-            showChevron={false}
-          />
-
-          <SettingItem
-            icon={Lock}
-            title="Privacy Settings"
-            subtitle="Control who can see your information"
-            onPress={handlePrivacySettings}
-          />
-
           <SettingItem
             icon={Globe}
-            title="Language & Region"
-            subtitle="English (US)"
+            title="Language"
+            subtitle="English"
           />
-
           <SettingItem
             icon={CreditCard}
             title="Payment Methods"
-            subtitle="Manage billing and payments"
           />
-
           <SettingItem
-            icon={Download}
-            title="Download Profile Data"
-            subtitle="Export your profile as PDF"
-            onPress={handleDownloadProfile}
-          />
-
-          <SettingItem
-            icon={Settings}
-            title="App Settings"
-            subtitle="General app preferences"
+            icon={Shield}
+            title="Privacy & Security"
           />
         </ProfileSection>
 
-        {/* Account Status */}
-        <View style={styles.accountStatus}>
-          <LinearGradient
-            colors={[Colors.success, Colors.successLight]}
-            style={styles.statusGradient}
-          >
-            <Shield size={isTablet ? 24 : 20} color={Colors.white} />
-            <View style={styles.statusInfo}>
-              <Text style={styles.statusTitle}>Professional Account</Text>
-              <Text style={styles.statusDescription}>
-                Verified professional member since {mockProfile.memberSince}
-              </Text>
-            </View>
-          </LinearGradient>
+        {/* Logout */}
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <LogOut size={isTablet ? 24 : 20} color={Colors.error} />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </ScrollView>
   );
+
+  const renderClientProfile = () => (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <SafeAreaView>
+        {/* Profile Header */}
+        <View style={styles.profileHeader}>
+          <Image 
+            source={{ uri: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=200&h=200' }}
+            style={styles.profileImage}
+          />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{user?.name}</Text>
+            <View style={styles.ratingContainer}>
+              <Star size={isTablet ? 20 : 16} color={Colors.secondary} fill={Colors.secondary} />
+              <Text style={styles.rating}>4.6</Text>
+              <Text style={styles.reviewCount}>(8 reviews)</Text>
+            </View>
+            <View style={styles.locationContainer}>
+              <MapPin size={isTablet ? 18 : 14} color={Colors.textSecondary} />
+              <Text style={styles.location}>Beirut, Lebanon</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.editButton}>
+            <Edit size={isTablet ? 22 : 18} color={Colors.primary} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Client Stats */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Briefcase size={isTablet ? 28 : 20} color={Colors.primary} />
+            <Text style={styles.statValue}>5</Text>
+            <Text style={styles.statLabel}>Jobs Posted</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Star size={isTablet ? 28 : 20} color={Colors.secondary} />
+            <Text style={styles.statValue}>4.6</Text>
+            <Text style={styles.statLabel}>Average Rating</Text>
+          </View>
+        </View>
+
+        {/* Contact Info */}
+        <ProfileSection title="Contact Information">
+          <SettingItem
+            icon={Phone}
+            title="Phone"
+            subtitle={user?.phone}
+          />
+          <SettingItem
+            icon={Mail}
+            title="Email"
+            subtitle={user?.email}
+          />
+        </ProfileSection>
+
+        {/* Settings */}
+        <ProfileSection title="Settings">
+          <SettingItem
+            icon={Bell}
+            title="Notifications"
+            rightElement={
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
+                trackColor={{ false: Colors.borderLight, true: Colors.primaryLight }}
+                thumbColor={notificationsEnabled ? Colors.primary : Colors.textLight}
+              />
+            }
+            showChevron={false}
+          />
+          <SettingItem
+            icon={Globe}
+            title="Language"
+            subtitle="English"
+          />
+          <SettingItem
+            icon={CreditCard}
+            title="Payment Methods"
+          />
+          <SettingItem
+            icon={Shield}
+            title="Privacy & Security"
+          />
+        </ProfileSection>
+
+        {/* Logout */}
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <LogOut size={isTablet ? 24 : 20} color={Colors.error} />
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </ScrollView>
+  );
+
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  return user.userType === 'worker' ? renderWorkerProfile() : renderClientProfile();
 }
 
 const createStyles = (dimensions: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   coverContainer: {
     position: 'relative',
@@ -461,12 +478,22 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     position: 'relative',
     marginRight: isTablet ? 20 : 16,
   },
+  profileHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: isTablet ? 32 : 20,
+    paddingTop: isTablet ? 32 : 20,
+    paddingBottom: isTablet ? 32 : 24,
+    backgroundColor: Colors.white,
+    marginBottom: isTablet ? 20 : 16,
+  },
   profileImage: {
     width: isTablet ? 120 : 100,
     height: isTablet ? 120 : 100,
     borderRadius: isTablet ? 60 : 50,
     borderWidth: 4,
     borderColor: Colors.white,
+    marginRight: isTablet ? 20 : 16,
   },
   cameraButton: {
     position: 'absolute',
@@ -555,32 +582,41 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  section: {
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: isTablet ? 8 : 6,
+  },
+  rating: {
+    fontSize: isTablet ? 16 : 14,
+    fontWeight: '600',
+    color: Colors.text,
+    marginLeft: 4,
+    marginRight: 4,
+  },
+  reviewCount: {
+    fontSize: isTablet ? 14 : 12,
+    color: Colors.textSecondary,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: isTablet ? 12 : 8,
+  },
+  location: {
+    fontSize: isTablet ? 14 : 12,
+    color: Colors.textSecondary,
+    marginLeft: 4,
+  },
+  editButton: {
+    padding: isTablet ? 12 : 8,
+  },
+  statsContainer: {
+    flexDirection: 'row',
     backgroundColor: Colors.white,
     marginBottom: isTablet ? 20 : 16,
-    paddingTop: isTablet ? 28 : 24,
-    paddingBottom: isTablet ? 28 : 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: isTablet ? 32 : 20,
-    marginBottom: isTablet ? 20 : 16,
-  },
-  sectionTitle: {
-    fontSize: isTablet ? 20 : 18,
-    fontWeight: '700',
-    color: Colors.text,
-  },
-  sectionAction: {
-    padding: 8,
-  },
-  summaryText: {
-    fontSize: isTablet ? 16 : 15,
-    color: Colors.textSecondary,
-    lineHeight: isTablet ? 24 : 22,
-    paddingHorizontal: isTablet ? 32 : 20,
+    paddingVertical: isTablet ? 28 : 20,
+    gap: 1,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -599,86 +635,51 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: isTablet ? 12 : 8,
+  },
   statValue: {
-    fontSize: isTablet ? 24 : 20,
-    fontWeight: '800',
+    fontSize: isTablet ? 24 : isLargeDevice ? 20 : isSmallDevice ? 18 : 19,
+    fontWeight: 'bold',
     color: Colors.text,
   },
   statLabel: {
     fontSize: isTablet ? 14 : 12,
     color: Colors.textSecondary,
     textAlign: 'center',
-    fontWeight: '500',
   },
   statTrend: {
     fontSize: isTablet ? 12 : 10,
     fontWeight: '600',
   },
+  section: {
+    backgroundColor: Colors.white,
+    marginBottom: isTablet ? 20 : 16,
+    paddingTop: isTablet ? 28 : 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: isTablet ? 32 : 20,
+    marginBottom: isTablet ? 20 : 16,
+  },
+  sectionTitle: {
+    fontSize: isTablet ? 20 : 16,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  sectionAction: {
+    padding: 8,
+  },
   skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: isTablet ? 32 : 20,
+    paddingBottom: isTablet ? 28 : 20,
     gap: isTablet ? 12 : 8,
-    marginBottom: isTablet ? 24 : 20,
-  },
-  certificationsContainer: {
-    paddingHorizontal: isTablet ? 32 : 20,
-  },
-  certificationsTitle: {
-    fontSize: isTablet ? 16 : 14,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: isTablet ? 16 : 12,
-  },
-  certificationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: isTablet ? 12 : 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    gap: 12,
-  },
-  certificationInfo: {
-    flex: 1,
-  },
-  certificationName: {
-    fontSize: isTablet ? 16 : 14,
-    fontWeight: '600',
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  certificationIssuer: {
-    fontSize: isTablet ? 14 : 12,
-    color: Colors.textSecondary,
-  },
-  contactGrid: {
-    paddingHorizontal: isTablet ? 32 : 20,
-    gap: isTablet ? 20 : 16,
-  },
-  contactItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: isTablet ? 16 : 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    gap: 16,
-  },
-  contactInfo: {
-    flex: 1,
-  },
-  contactLabel: {
-    fontSize: isTablet ? 14 : 12,
-    color: Colors.textSecondary,
-    marginBottom: 4,
-    fontWeight: '500',
-  },
-  contactValue: {
-    fontSize: isTablet ? 16 : 14,
-    color: Colors.text,
-    fontWeight: '500',
-  },
-  privacyIndicator: {
-    padding: 8,
   },
   settingItem: {
     flexDirection: 'row',
@@ -711,7 +712,7 @@ const createStyles = (dimensions: any) => StyleSheet.create({
   },
   settingItemTitle: {
     fontSize: isTablet ? 16 : 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: Colors.text,
   },
   settingItemSubtitle: {
@@ -727,30 +728,20 @@ const createStyles = (dimensions: any) => StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  accountStatus: {
-    marginHorizontal: isTablet ? 32 : 20,
+  logoutContainer: {
+    backgroundColor: Colors.white,
     marginBottom: isTablet ? 40 : 32,
-    borderRadius: isTablet ? 16 : 12,
-    overflow: 'hidden',
   },
-  statusGradient: {
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: isTablet ? 24 : 20,
-    gap: 16,
+    justifyContent: 'center',
+    paddingVertical: isTablet ? 20 : 16,
+    gap: isTablet ? 12 : 8,
   },
-  statusInfo: {
-    flex: 1,
-  },
-  statusTitle: {
+  logoutText: {
     fontSize: isTablet ? 18 : 16,
-    fontWeight: '700',
-    color: Colors.white,
-    marginBottom: 4,
-  },
-  statusDescription: {
-    fontSize: isTablet ? 14 : 12,
-    color: Colors.white,
-    opacity: 0.9,
+    fontWeight: '500',
+    color: Colors.error,
   },
 });

@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, MapPin, Clock, DollarSign, Star, Phone, MessageCircle, Calendar, Camera, Shield, User } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
+import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
 
@@ -47,6 +48,7 @@ const mockClient = {
 export default function JobDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuthState();
   const [job, setJob] = useState<Job | null>(null);
   const [applied, setApplied] = useState(false);
 
@@ -56,20 +58,24 @@ export default function JobDetailsScreen() {
   }, [id]);
 
   const handleApply = () => {
-    Alert.alert(
-      'Apply for Job',
-      'Are you sure you want to apply for this job?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Apply', 
-          onPress: () => {
-            setApplied(true);
-            Alert.alert('Success', 'Your application has been submitted!');
+    if (user?.userType === 'worker') {
+      Alert.alert(
+        'Apply for Job',
+        'Are you sure you want to apply for this job?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Apply', 
+            onPress: () => {
+              setApplied(true);
+              Alert.alert('Success', 'Your application has been submitted!');
+            }
           }
-        }
-      ]
-    );
+        ]
+      );
+    } else {
+      Alert.alert('Error', 'Only workers can apply for jobs');
+    }
   };
 
   const handleContact = () => {
@@ -92,6 +98,8 @@ export default function JobDetailsScreen() {
       default: return Colors.textSecondary;
     }
   };
+
+  const shouldShowApplyButton = user?.userType === 'worker';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -204,17 +212,19 @@ export default function JobDetailsScreen() {
       </ScrollView>
 
       {/* Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity 
-          style={[styles.applyButton, applied && styles.appliedButton]}
-          onPress={handleApply}
-          disabled={applied}
-        >
-          <Text style={[styles.applyButtonText, applied && styles.appliedButtonText]}>
-            {applied ? 'Applied' : 'Apply for Job'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {shouldShowApplyButton && (
+        <View style={styles.bottomBar}>
+          <TouchableOpacity 
+            style={[styles.applyButton, applied && styles.appliedButton]}
+            onPress={handleApply}
+            disabled={applied}
+          >
+            <Text style={[styles.applyButtonText, applied && styles.appliedButtonText]}>
+              {applied ? 'Applied' : 'Apply for Job'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

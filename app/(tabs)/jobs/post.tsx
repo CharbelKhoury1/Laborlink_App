@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Scro
 import { useRouter } from 'expo-router';
 import { ArrowLeft, MapPin, Camera, X, Plus } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
+import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
 
 const URGENCY_OPTIONS = [
@@ -18,6 +19,7 @@ const SKILL_SUGGESTIONS = [
 
 export default function PostJobScreen() {
   const router = useRouter();
+  const { user } = useAuthState();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -67,6 +69,11 @@ export default function PostJobScreen() {
 
     if (formData.requiredSkills.length === 0) {
       Alert.alert('Error', 'Please add at least one required skill');
+      return;
+    }
+
+    if (user?.userType !== 'client') {
+      Alert.alert('Error', 'Only clients can post jobs');
       return;
     }
 

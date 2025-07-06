@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView, Scro
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Send, Phone, Video, MoveVertical as MoreVertical, Paperclip, Camera } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
+import { useAuthState } from '@/hooks/useAuth';
 
 interface Message {
   id: string;
@@ -73,15 +74,10 @@ const mockParticipant = {
   online: true
 };
 
-// Mock current user for message identification
-const mockCurrentUser = {
-  id: 'worker1',
-  name: 'Current User'
-};
-
 export default function ChatScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { user } = useAuthState();
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [newMessage, setNewMessage] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
@@ -98,7 +94,7 @@ export default function ChatScreen() {
 
     const message: Message = {
       id: Date.now().toString(),
-      senderId: mockCurrentUser.id,
+      senderId: user?.id || 'current_user',
       content: newMessage.trim(),
       timestamp: new Date(),
       type: 'text'
@@ -113,7 +109,7 @@ export default function ChatScreen() {
   };
 
   const isMyMessage = (senderId: string) => {
-    return senderId === mockCurrentUser.id || senderId === 'worker1'; // Mock current user
+    return senderId === user?.id || senderId === 'worker1'; // Mock current user
   };
 
   const MessageBubble = ({ message }: { message: Message }) => {

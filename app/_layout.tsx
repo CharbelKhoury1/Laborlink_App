@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
@@ -6,7 +6,9 @@ import { Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { SplashScreen } from 'expo-router';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { useAuthState } from '@/hooks/useAuth';
+import { useRouter } from 'expo-router';
+import { View, StyleSheet, Alert, Dimensions, Text } from 'react-native';
 import Colors from '@/constants/Colors';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -19,6 +21,10 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   useFrameworkReady();
   
+  const router = useRouter();
+  const { user, initialized, loading, error, clearError } = useAuthState();
+  const [navigationReady, setNavigationReady] = useState(false);
+
   const [fontsLoaded, fontError] = useFonts({
     'Cairo-Regular': Cairo_400Regular,
     'Cairo-Bold': Cairo_700Bold,
@@ -28,11 +34,46 @@ export default function RootLayout() {
 
   // Hide splash screen when everything is ready
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      console.log('✅ Hiding splash screen - Fonts loaded:', fontsLoaded);
+    if ((fontsLoaded || fontError) && initialized) {
+      console.log('✅ Hiding splash screen - Fonts loaded:', fontsLoaded, 'Auth initialized:', initialized);
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, initialized]);
+
+  // Handle authentication errors
+  useEffect(() => {
+    if (error) {
+      Alert.alert(
+        'Authentication Error',
+        error,
+        [
+          { text: 'OK', onPress: clearError }
+        ]
+      );
+    }
+  }, [error, clearError]);
+
+  // Navigation logic - production mode
+  useEffect(() => {
+    if (initialized && !loading && (fontsLoaded || fontError) && !navigationReady) {
+      console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
+      
+      // Delay navigation to ensure UI is ready
+      const navigationTimeout = setTimeout(() => {
+        setNavigationReady(true);
+        
+        if (user) {
+          console.log('✅ Navigating to tabs with user:', user.userType);
+          router.replace('/(tabs)');
+        } else {
+          console.log('ℹ️ Navigating to auth - no user found');
+          router.replace('/auth');
+        }
+      }, 300);
+
+      return () => clearTimeout(navigationTimeout);
+    }
+  }, [user, initialized, loading, router, fontsLoaded, fontError, navigationReady]);
 
   // Show loading while fonts are loading
   if (!fontsLoaded && !fontError) {
@@ -47,10 +88,37 @@ export default function RootLayout() {
     );
   }
 
+  // Show loading while auth is initializing
+  if (!initialized || loading) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <View style={styles.loadingContent}>
+          <Text style={styles.appTitle}>WorkConnect</Text>
+          <Text style={styles.appSubtitle}>Lebanon</Text>
+          <LoadingSpinner size="large" showText text="Initializing..." />
+        </View>
+      </View>
+    );
+  }
+
+  // Show loading while navigation is preparing
+  if (!navigationReady) {
+    return (
+      <View style={styles.fullScreenContainer}>
+        <View style={styles.loadingContent}>
+          <Text style={styles.appTitle}>WorkConnect</Text>
+          <Text style={styles.appSubtitle}>Lebanon</Text>
+          <LoadingSpinner size="large" showText text="Preparing..." />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <View style={styles.fullScreenContainer}>
         <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="auth" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="typewriter-demo" />
           <Stack.Screen name="+not-found" />
@@ -67,9 +135,10 @@ const styles = StyleSheet.create({
     width: screenWidth,
     height: screenHeight,
     backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContent: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,

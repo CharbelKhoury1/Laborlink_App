@@ -53,7 +53,7 @@ export default function RootLayout() {
     }
   }, [error, clearError]);
 
-  // Navigation logic - production mode
+  // Navigation logic
   useEffect(() => {
     if (initialized && !loading && (fontsLoaded || fontError) && !navigationReady) {
       console.log('🔄 Navigation check - User:', user?.email, 'Type:', user?.userType, 'Initialized:', initialized);
@@ -118,6 +118,7 @@ export default function RootLayout() {
     <ErrorBoundary>
       <View style={styles.fullScreenContainer}>
         <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
           <Stack.Screen name="auth" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="typewriter-demo" />

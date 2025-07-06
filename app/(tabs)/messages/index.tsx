@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Ima
 import { useRouter } from 'expo-router';
 import { MessageCircle, Phone, Video } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
+import ErrorBoundary from '@/components/ErrorBoundary'; // Added ErrorBoundary
 import { useAuthState } from '@/hooks/useAuth';
 import i18n from '@/utils/i18n';
 
@@ -127,7 +128,7 @@ export default function MessagesScreen() {
     );
   }
 
-  return (
+  const content = (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{i18n.t('messages')}</Text>
@@ -153,6 +154,8 @@ export default function MessagesScreen() {
       )}
     </SafeAreaView>
   );
+
+  return <ErrorBoundary>{content}</ErrorBoundary>;
 }
 
 const createStyles = (dimensions: any) => StyleSheet.create({

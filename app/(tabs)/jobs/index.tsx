@@ -5,6 +5,7 @@ import { Search, Filter, MapPin, Plus, SlidersHorizontal } from 'lucide-react-na
 import Colors from '@/constants/Colors';
 import JobCard from '@/components/JobCard';
 import FilterModal from '@/components/FilterModal';
+import ErrorBoundary from '@/components/ErrorBoundary'; // Added ErrorBoundary
 import { useAuthState } from '@/hooks/useAuth';
 import { Job } from '@/types';
 import i18n from '@/utils/i18n';
@@ -302,7 +303,9 @@ export default function JobsScreen() {
     );
   }
 
-  return user.userType === 'worker' ? renderWorkerJobs() : renderClientJobs();
+  const content = user.userType === 'worker' ? renderWorkerJobs() : renderClientJobs();
+
+  return <ErrorBoundary>{content}</ErrorBoundary>;
 }
 
 const createStyles = (dimensions: any) => StyleSheet.create({

@@ -37,10 +37,13 @@
 - **Solution**: Created consistent loading patterns across app
 
 #### 6. Error Handling
-- **Issue**: Limited error boundaries and feedback
-- **Impact**: Poor error recovery experience
-- **Status**: 🔄 IN PROGRESS - Enhanced error states
-- **Solution**: Added inline error displays instead of alerts
+- **Issue**: Limited error boundaries and feedback.
+- **Impact**: Poor error recovery experience.
+- **Status**: 🔄 IN PROGRESS - Enhanced error states.
+- **Solution**:
+  - Added inline error displays instead of alerts.
+  - Implemented a global `ErrorBoundary` at the app root (`app/_layout.tsx`) to catch unhandled rendering errors.
+  - Wrapped main tab screens (Jobs, Messages, Profile) with individual `ErrorBoundary` components to isolate errors and improve fault tolerance.
 
 ### **LOW PRIORITY - Polish & Enhancement**
 
@@ -127,7 +130,9 @@
 7. Loading state standardization
 
 ### **In Progress 🔄**
-1. Advanced error boundaries
+1. Advanced error boundaries:
+   - Global error boundary implemented (`app/_layout.tsx`).
+   - Component-level error boundaries added for main tab screens (Jobs, Messages, Profile) to isolate UI errors.
 2. Offline support
 3. Performance monitoring
 4. Accessibility improvements

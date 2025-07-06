@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Ima
 import { Settings, CreditCard as Edit, Star, MapPin, Phone, Mail, Shield, CreditCard, Bell, Globe, LogOut, ChevronRight, Briefcase, Clock } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
 import SkillChip from '@/components/SkillChip';
+import ErrorBoundary from '@/components/ErrorBoundary'; // Added ErrorBoundary
 import { useAuthState } from '@/hooks/useAuth';
 import { SKILL_CATEGORIES } from '@/constants/SkillCategories';
 import i18n from '@/utils/i18n';
@@ -291,7 +292,8 @@ export default function ProfileScreen() {
     );
   }
 
-  return user.userType === 'worker' ? renderWorkerProfile() : renderClientProfile();
+  const content = user.userType === 'worker' ? renderWorkerProfile() : renderClientProfile();
+  return <ErrorBoundary>{content}</ErrorBoundary>;
 }
 
 const createStyles = (dimensions: any) => StyleSheet.create({
